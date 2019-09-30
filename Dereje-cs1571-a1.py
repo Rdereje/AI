@@ -42,13 +42,11 @@ def bfs(puzzle, size):
 	nodeNum = max
 	(r,c) = next_empty_space(puzzle,0,0)
 	(lastR,lastC) = lastBox(puzzle)
-	print("last r is {} and last c is {}".format(lastR,lastC))
+
 	for k in range(1,max+1):
-		print(k)
 		puzzle[r][c] = k
 		curr = Node(False,r,c, copy.copy(puzzle))
 		if playable(puzzle, r, c, str(k)) is True:
-			print("Playable {}".format(k))
 			waitList.put(curr)
 
 
