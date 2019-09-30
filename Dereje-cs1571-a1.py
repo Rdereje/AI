@@ -1,4 +1,5 @@
 import queue
+import copy
 class Node:
 	def __init__(self, permanent, r, c,value):
 		self.permanent = permanent
@@ -45,42 +46,12 @@ def bfs(puzzle, size):
 	for k in range(1,max+1):
 		print(k)
 		puzzle[r][c] = k
-		curr = Node(False,r,c,puzzle)
-		if playable(puzzle, r, c, k) is True:
+		curr = Node(False,r,c, copy.copy(puzzle))
+		if playable(puzzle, r, c, str(k)) is True:
 			print("Playable {}".format(k))
 			waitList.put(curr)
 
-	while not waitList.empty() and not gameSolved:
-		curr = waitList.get()
-		puzzle = curr.value
-		print(curr.value[curr.r][curr.c])
-		#print("currR is {} and currC is {}".format(curr.r, curr.c))
-		(r, c) = next_empty_space(puzzle, curr.r, curr.c)
-		if r == -1:
-			gameSolved = True
-		elif r == lastR and c == lastC:
-			k = 1
-			while not gameSolved and k < max+1:
-				puzzle[r][c] = k
-				curr = Node(False, r, c, puzzle)
-				nodeNum = nodeNum + 1
-				if playable(puzzle,r,c,k):
-					gameSolved = True
-					donePuzzle = puzzle
-				else:
-					k = k+1
-		else:
-			for k in range(1, max+1):
-				puzzle[r][c] = k
-				curr = Node(False, r, c, puzzle)
-				nodeNum = nodeNum + 1
-				if playable(puzzle, r, c, k):
-					waitList.put(curr)
-	if gameSolved:
-		for row in donePuzzle:
-			print(row)
-	else:
-		print("You tired fuck up")
+
 #########################################################################################
 
 def lastBox(table):
@@ -112,6 +83,7 @@ def next_empty_space(table,r,c):
 
 def playable(table, r, c, value):
 	size = len(table)
+
 	for i in range(size):
 		if table[r][i] == value and i != c:
 			return False
