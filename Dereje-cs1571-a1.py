@@ -1,4 +1,5 @@
 import queue
+import copy
 class Node:
 	def __init__(self, permanent, r, c,value):
 		self.permanent = permanent
@@ -23,7 +24,10 @@ def sudoku_solver(table, search):
 	for i in range(m):
 		sudoku.append([0]*m)
 		for j in range(m):
-			sudoku[i][j] = table[c]
+			if table[c] == '.':
+				sudoku[i][j] = 0
+			else:
+				sudoku[i][j] = int(table[c])
 			c = c+1
 
 	if search == "bfs":
@@ -41,53 +45,51 @@ def bfs(puzzle, size):
 	nodeNum = max
 	(r,c) = next_empty_space(puzzle,0,0)
 	(lastR,lastC) = lastBox(puzzle)
-	print("last r is {} and last c is {}".format(lastR,lastC))
+
 	for k in range(1,max+1):
-		print(k)
 		puzzle[r][c] = k
-		curr = Node(False,r,c,puzzle)
+		curr = Node(False,r,c, copy.deepcopy(puzzle))
 		if playable(puzzle, r, c, k) is True:
-			print("Playable {}".format(k))
 			waitList.put(curr)
 
 	while not waitList.empty() and not gameSolved:
 		curr = waitList.get()
 		puzzle = curr.value
-		print(curr.value[curr.r][curr.c])
-		#print("currR is {} and currC is {}".format(curr.r, curr.c))
 		(r, c) = next_empty_space(puzzle, curr.r, curr.c)
 		if r == -1:
 			gameSolved = True
 		elif r == lastR and c == lastC:
 			k = 1
-			while not gameSolved and k < max+1:
+			while not gameSolved and k < max + 1:
 				puzzle[r][c] = k
-				curr = Node(False, r, c, puzzle)
+				curr = Node(False, r, c, copy.deepcopy(puzzle))
 				nodeNum = nodeNum + 1
-				if playable(puzzle,r,c,k):
+				if playable(puzzle, r, c, k):
 					gameSolved = True
 					donePuzzle = puzzle
 				else:
-					k = k+1
+					k = k + 1
 		else:
-			for k in range(1, max+1):
+			for k in range(1, max + 1):
 				puzzle[r][c] = k
-				curr = Node(False, r, c, puzzle)
+				curr = Node(False, r, c, copy.deepcopy(puzzle))
 				nodeNum = nodeNum + 1
-				if playable(puzzle, r, c, k):
+				if playable(curr.value, r, c, k):
 					waitList.put(curr)
 	if gameSolved:
 		for row in donePuzzle:
 			print(row)
 	else:
-		print("You tired fuck up")
+		print("error")
+
+
 #########################################################################################
 
 def lastBox(table):
 	size = len(table)
 	r = size - 1
 	c = size -1
-	while table[r][c] != '.':
+	while table[r][c] != 0:
 		if c == 0:
 			r = r-1
 			c = size -1
@@ -100,13 +102,12 @@ def next_empty_space(table,r,c):
 	i = r
 	j = c
 	found = False
-	while table[i][j] != '.':
-		if j < size:
-			j = j+1
-		else:
+	while table[i][j] != 0:
+		j = j+1
+		if j == size:
 			i = i +1
 			j = 0
-	if table[i][j] == '.':
+	if table[i][j] == 0:
 		return (i, j)
 	return (-1,-1)
 
