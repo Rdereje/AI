@@ -24,7 +24,10 @@ def sudoku_solver(table, search):
 	for i in range(m):
 		sudoku.append([0]*m)
 		for j in range(m):
-			sudoku[i][j] = table[c]
+			if table[c] == '.':
+				sudoku[i][j] = 0
+			else:
+				sudoku[i][j] = int(table[c])
 			c = c+1
 
 	if search == "bfs":
@@ -45,9 +48,39 @@ def bfs(puzzle, size):
 
 	for k in range(1,max+1):
 		puzzle[r][c] = k
-		curr = Node(False,r,c, copy.copy(puzzle))
-		if playable(puzzle, r, c, str(k)) is True:
+		curr = Node(False,r,c, copy.deepcopy(puzzle))
+		if playable(puzzle, r, c, k) is True:
 			waitList.put(curr)
+
+	while not waitList.empty() and not gameSolved:
+		curr = waitList.get()
+		puzzle = curr.value
+		(r, c) = next_empty_space(puzzle, curr.r, curr.c)
+		if r == -1:
+			gameSolved = True
+		elif r == lastR and c == lastC:
+			k = 1
+			while not gameSolved and k < max + 1:
+				puzzle[r][c] = k
+				curr = Node(False, r, c, copy.deepcopy(puzzle))
+				nodeNum = nodeNum + 1
+				if playable(puzzle, r, c, k):
+					gameSolved = True
+					donePuzzle = puzzle
+				else:
+					k = k + 1
+		else:
+			for k in range(1, max + 1):
+				puzzle[r][c] = k
+				curr = Node(False, r, c, copy.deepcopy(puzzle))
+				nodeNum = nodeNum + 1
+				if playable(curr.value, r, c, k):
+					waitList.put(curr)
+	if gameSolved:
+		for row in donePuzzle:
+			print(row)
+	else:
+		print("error")
 
 
 #########################################################################################
@@ -56,7 +89,7 @@ def lastBox(table):
 	size = len(table)
 	r = size - 1
 	c = size -1
-	while table[r][c] != '.':
+	while table[r][c] != 0:
 		if c == 0:
 			r = r-1
 			c = size -1
@@ -69,19 +102,17 @@ def next_empty_space(table,r,c):
 	i = r
 	j = c
 	found = False
-	while table[i][j] != '.':
-		if j < size:
-			j = j+1
-		else:
+	while table[i][j] != 0:
+		j = j+1
+		if j == size:
 			i = i +1
 			j = 0
-	if table[i][j] == '.':
+	if table[i][j] == 0:
 		return (i, j)
 	return (-1,-1)
 
 def playable(table, r, c, value):
 	size = len(table)
-
 	for i in range(size):
 		if table[r][i] == value and i != c:
 			return False
