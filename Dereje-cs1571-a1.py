@@ -32,6 +32,8 @@ def sudoku_solver(table, search):
 
 	if search == "bfs":
 		bfs(sudoku, m)
+	elif search == "dfs":
+		dfs(sudoku,m)
 
 #########################################################################################
 def bfs(puzzle, size):
@@ -81,6 +83,23 @@ def bfs(puzzle, size):
 			print(row)
 	else:
 		print("error")
+
+
+#########################################################################################
+def dfs(puzzle, max):
+	waitList = queue.Queue()
+	gameSolved = False;
+	(r, c) = next_empty_space(puzzle, 0, 0)
+	(lastR, lastC) = lastBox(puzzle)
+	k = 1
+	playable = False
+	while k <= max and not playable:
+		playable = playable(puzzle, curr.r, curr.c, k)
+		puzzle[r][c] = k
+		curr = Node(False, r, c, copy.deepcopy(puzzle))
+		k = k+1
+
+
 
 
 #########################################################################################
