@@ -24,7 +24,10 @@ def sudokuSolver(line,algor):
         sudoku = search.Problem(board,[1,2,3,4])
     else:
         sudoku = search.Problem(board,[1, 2, 3, 4, 5, 6, 7, 8, 9])
-    pie = search.breadth_first_tree_search(sudoku)
+    if algor == "bfs":
+        pie = search.breadth_first_tree_search(sudoku)
+    else:
+        pie = search.depth_first_tree_search(sudoku)
     for row in pie.state:
         print(row)
 

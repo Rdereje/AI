@@ -49,7 +49,7 @@ class Problem(object):
         return state
 
     def goal_test(self, node):
-        (r, c) = node.next_empty_var()
+        r, c = node.next_empty_var()
         if r == -1:
             return True
         else:
@@ -251,9 +251,10 @@ def depth_first_tree_search(problem):
 
     while frontier:
         node = frontier.pop()
-        if problem.goal_test(node.state):
-            return node
-        frontier.extend(node.expand(problem))
+        if node.playable():
+            if problem.goal_test(node):
+                return node
+            frontier.extend(node.expand(problem))
     return None
 
 
