@@ -157,11 +157,11 @@ class Node:
         c = self.c
         end = False
         size = len(table)
-        if r >= size -1 and c >= size -1:
-            return -1,-1
+        if r >= size - 1 and c >= size - 1:
+            return -1, -1
         while not end and table[r][c] != 0:
             c = c + 1
-            if c >= size-1 and r >= size - 1 and table[r][c] != 0:
+            if c >= size - 1 and r >= size - 1 and table[r][c] != 0:
                 end = True
             elif c == size:
                 r = r + 1
@@ -271,9 +271,10 @@ def depth_first_graph_search(problem):
         if problem.goal_test(node.state):
             return node
         explored.add(node.state)
-        frontier.extend(child for child in node.expand(problem)
-                        if child.state not in explored and
-                        child not in frontier)
+        if node.playable():
+            frontier.extend(child for child in node.expand(problem)
+                            if child.state not in explored and
+                            child not in frontier)
     return None
 
 
