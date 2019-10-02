@@ -30,21 +30,19 @@ class Problem(object):
     __init__, goal_test, and path_cost. Then you will create instances
     of your subclass and solve them with the various search functions."""
 
-    def __init__(self, initial, size, goal=None):
+    def __init__(self, initial, goal=None):
         """The constructor specifies the initial state, and possibly a goal
         state, if there is a unique goal. Your subclass's constructor can add
         other arguments."""
         self.initial = initial
         self.goal = goal
-        self.size = size
-        self.nodeNum = 0
-        (r,c)
 
     def actions(self, state):
-        if self.size == 4:
-            return [val in range(1,5)]
-        else:
-            return [val in range(1,10)]
+        """Return the actions that can be executed in the given
+        state. The result would typically be a list, but if there are
+        many actions, consider yielding them one at a time in an
+        iterator, rather than building them all at once."""
+        raise NotImplementedError
 
     def result(self, state, action):
         """Return the state that results from executing the given
