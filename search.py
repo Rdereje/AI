@@ -49,7 +49,7 @@ class Problem(object):
         return state
 
     def goal_test(self, node):
-        (r,c) = node.next_empty_state()
+        (r, c) = node.next_empty_var()
         if r == -1:
             return True
         else:
@@ -81,14 +81,17 @@ class Node:
     an explanation of how the f and h values are handled. You will not need to
     subclass this class."""
 
-    def __init__(self, state, parent=None, action=None, path_cost=0, r = None, c = None):
+    def __init__(self, state, parent=None, action=None, path_cost=0, r=0, c=0):
         """Create a search tree Node, derived from a parent by an action."""
         self.state = state
         self.parent = parent
         self.action = action
         self.path_cost = path_cost
         self.depth = 0
-        (r,c) = self.next_empty_var()
+        self.r = r
+        self.c = c
+        if r == 0 and c == 0:
+            (r, c) = self.next_empty_var()
         self.r = r
         self.c = c
         if parent:
@@ -117,6 +120,7 @@ class Node:
     def solution(self):
         """Return the sequence of actions to go from the root to this node."""
         return [node.action for node in self.path()[1:]]
+
     def playable(self):
         value = self.state[self.r][self.c]
         if value == 0:
@@ -131,14 +135,13 @@ class Node:
             div = 2
         else:
             div = 3
-        blockr = (self.r//div)*div
-        blockc = (self.c//div) *div
+        blockr = (self.r // div) * div
+        blockc = (self.c // div) * div
         for i in range(blockr, blockr + div):
-            for j in range(blockc, blockc+div):
+            for j in range(blockc, blockc + div):
                 if self.state == value and (i != self.r and j != self.c):
                     return False
         return True
-
 
     def path(self):
         """Return a list of nodes forming the path from the root to this node."""
@@ -154,16 +157,18 @@ class Node:
         c = self.c
         end = False
         size = len(table)
-        while table[r][c] != 0 and not end:
+        if r >= size -1 and c >= size -1:
+            return -1,-1
+        while not end and table[r][c] != 0:
             c = c + 1
-            if c == size and r == size - 1:
+            if c >= size-1 and r >= size - 1 and table[r][c] != 0:
                 end = True
             elif c == size:
                 r = r + 1
                 c = 0
         if table[r][c] == 0:
-            return (r, c)
-        return (-1, -1)
+            return r, c
+        return -1, -1
 
     # We want for a queue of nodes in breadth_first_graph_search or
     # astar_search to have no duplicated states, so we treat nodes

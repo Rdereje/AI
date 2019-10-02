@@ -1,6 +1,6 @@
 import search
 import csp
-def sudokuSolver(line,search):
+def sudokuSolver(line,algor):
     puzzle = csp.Sudoku(line)
     puzzle.display(puzzle.infer_assignment())
 
@@ -19,11 +19,14 @@ def sudokuSolver(line,search):
             else:
                 board[i][j] = int(line[c])
             c = c+1
-    sudoku = search.Problem(board)
+
     if len(line) == 16:
-        pie = search.breadth_first_tree_search(sudoku,[1,2,3,4])
+        sudoku = search.Problem(board,[1,2,3,4])
     else:
-        pie = search.breadth_first_tree_search(sudoku, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+        sudoku = search.Problem(board,[1, 2, 3, 4, 5, 6, 7, 8, 9])
+    pie = search.breadth_first_tree_search(sudoku)
+    for row in pie.state:
+        print(row)
 
 
 
