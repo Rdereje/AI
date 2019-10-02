@@ -2,7 +2,6 @@
 import string
 from operator import eq, neg
 
-from sortedcontainers import SortedSet
 
 from utils import argmin_random_tie, count, first, extend
 import search
@@ -100,8 +99,7 @@ class CSP(search.Problem):
         else:
             assignment = dict(state)
             var = first([v for v in self.variables if v not in assignment])
-            return [(var, val) for val in self.domains[var]
-                    if self.nconflicts(var, val, assignment) == 0]
+            return [(var, val) for val in self.domains[var]]
 
     def result(self, state, action):
         """Perform an action and return the new state."""
@@ -791,13 +789,13 @@ class Sudoku(CSP):
             for unit in map(set, _BOXES + _ROWS + _COLS):
                 for v in unit:
                     _NEIGHBORS[v].update(unit - {v})
-            R3 = _R3
-            Cell = _CELL
-            bgrid = _BGRID
-            boxes = _BOXES
-            rows = _ROWS
-            cols = _COLS
-            neighbors = _NEIGHBORS
+            self.R3 = _R3
+            self.Cell = _CELL
+            self.bgrid = _BGRID
+            self.boxes = _BOXES
+            self.rows = _ROWS
+            self.cols = _COLS
+            self.neighbors = _NEIGHBORS
 
         squares = iter(re.findall(r'\d|\.', grid))
         if len(grid) == 16:

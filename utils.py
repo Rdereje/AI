@@ -9,7 +9,6 @@ import os.path
 import random
 import math
 import functools
-import numpy as np
 from itertools import chain, combinations
 
 
