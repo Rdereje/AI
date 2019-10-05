@@ -231,13 +231,17 @@ def breadth_first_tree_search(problem):
         Repeats infinitely in case of loops. [Figure 3.7]"""
 
     frontier = deque([Node(problem.initial)])  # FIFO queue
-
+    nodesCreated = len(frontier)
     while frontier:
         node = frontier.popleft()
+        nodesCurrent = len(frontier)
         if node.playable():
             if problem.goal_test(node):
+                print(nodesCreated)
                 return node
             frontier.extend(node.expand(problem))
+            newNodes = len(frontier)
+            nodesCreated = nodesCreated + (newNodes - nodesCurrent)
     return None
 
 
@@ -248,13 +252,17 @@ def depth_first_tree_search(problem):
         Repeats infinitely in case of loops. [Figure 3.7]"""
 
     frontier = [Node(problem.initial)]  # Stack
-
+    nodesCreated = len(frontier)
     while frontier:
         node = frontier.pop()
+        nodesCurrent = len(frontier)
         if node.playable():
             if problem.goal_test(node):
+                print(nodesCreated)
                 return node
             frontier.extend(node.expand(problem))
+            newNodes = len(frontier)
+            nodesCreated = nodesCreated + (newNodes - nodesCurrent)
     return None
 
 

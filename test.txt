@@ -1,0 +1,16 @@
+CS1622;Introduction to Compiler Design;1;0;0;V. Petrucci;1;HP,SEC
+CS1632;Software Quality Assurance;2;0;0;D. Ahn;2;
+CS1640;Bionformatics Software Design;1;0;0;L. Nunes;1;
+CS1645;Introduction to High Performance Computing Systems;1;0;0;K. Kosta;1;HP
+CS1652;Data Communication and Computer Networks;1;0;0;J. Lange;1;HP,SEC
+CS1653;Applied Cryptography and Network Security;1;0;0;W. Garritson;1;SEC
+CS1656;Introduction to Data Science;1;0;1;A.Labrindis;1;DS,SEC
+CS1666;Principles of Computer Game Design and Implementation;1;0;0;N. Farnan;1;
+CS1674;Introduction to Computer Vision;1;0;0;A. Kovashka;1;AI,DS
+CS1566;Introduction to Computer Graphics;1;0;0;T. Kosiyatrakul;1;
+CS1571;Introduction to Artificial Intelligence;1;0;0;E. Walker;1;AI,DS
+CS1621;Structure Programming Languages;1;0;0;Y. Zhang;1;
+CS1555;Database Management Systems;1;0;2;P. Chrysanthis;1;BU,SE,SEC,DS
+CS1510;Algorithm Design;1;1;0;K. Pruhs;1;AI,SE
+CS1520;Programming Language for Web Applications;2;0;4;A. Hobaugh;2;
+CS1530;Software Engineering;2;0;0;S. Chang;2;BU,SE
