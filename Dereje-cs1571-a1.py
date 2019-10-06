@@ -116,3 +116,6 @@ def getClasses(line):
         i = i +1
     return classlist
 
+def class_constraint(A,a,B,b):
+    
+
