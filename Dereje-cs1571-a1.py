@@ -40,9 +40,13 @@ def scheduleCourses(file, slots):
     f = open(file, 'r')
     classList = []
     for line in f.readlines():
-        classList.append(Classes(line))
-        classList[index].display()
-        index = index + 1
+        offers = getClasses(line)
+        for j in offers:
+            classList.append(j)
+    print(len(classList))
+        #classList[index].display()
+        #index = index + 1
+
 class Sections:
     def __init__(self, teach):
         self.teach = teach
@@ -51,49 +55,64 @@ class Sections:
         print("Professor {} sections {}".format(self.teach, self.section))
 
 class Classes:
-    def __init__(self,line):
-        start = 0
-        location = line.find(';', start)
-        self.classNum = line[start:location]
+    def __init__(self,classNum, teacher, area):
+        self.classNum = classNum
+        self.teacher = teacher
+        self.area = area
 
-        start = location + 1
-        location = line.find(';', start)
-        start = location +1
-        self.classOffers = int(line[start])
+    def display(self):
+        print("Class Number {}, teacher {}".format(self.classNum, self.teacher))
+        print(self.areas)
 
-        start = start + 6
-        self.teachers = []
-        location = line.find(';',start)
 
-        teachNum = 0
-        teachLoc = line.find(',',start,location)
-        while teachLoc != -1:
-            self.teachers.append(Sections(line[start:teachLoc]))
-            start = teachLoc + 1
-            teachLoc = line.find(',', start, location)
-            teachNum = teachNum + 1
+def getClasses(line):
+    start = 0
+    location = line.find(';', start)
+    classNum = line[start:location]
 
-        self.teachers.append(Sections(line[start:location]))
-        start = location + 1
+    start = location + 1
+    location = line.find(';', start)
+    start = location +1
+    classOffers = int(line[start])
+
+    start = start + 6
+    teachers = []
+    location = line.find(';',start)
+
+    teachNum = 0
+    teachLoc = line.find(',',start,location)
+    while teachLoc != -1:
+        teachers.append(Sections(line[start:teachLoc]))
+        start = teachLoc + 1
+        teachLoc = line.find(',', start, location)
         teachNum = teachNum + 1
 
-        for i in range(teachNum):
-            self.teachers[i].seaction = int(line[start])
-            start = start+2
-        end = len(line)
-        self.areas = []
-        if start < end:
-            location = line.find(',', start)
-            while location != -1:
-                self.areas.append(line[start:location])
-                start = location + 1
-                location = line.find(',',start)
-            lastLoc = line[start:end]
-            if '\n' in lastLoc:
-                lastLoc = lastLoc[:len(lastLoc)-1]
-            self.areas.append(lastLoc)
-    def display(self):
-        print("Class Number {}, Offerings {}".format(self.classNum, self.classOffers))
-        print(self.areas)
-        for i in range(len(self.teachers)):
-            print(self.teachers[i].display)
+    teachers.append(Sections(line[start:location]))
+    start = location + 1
+    teachNum = teachNum + 1
+
+    for i in range(teachNum):
+        teachers[i].seaction = int(line[start])
+        start = start+2
+    end = len(line)
+    areas = []
+    if start < end:
+        location = line.find(',', start)
+        while location != -1:
+            areas.append(line[start:location])
+            start = location + 1
+            location = line.find(',',start)
+        lastLoc = line[start:end]
+        if '\n' in lastLoc:
+            lastLoc = lastLoc[:len(lastLoc)-1]
+        areas.append(lastLoc)
+    seaction = 0
+    i = 0
+    classlist = []
+    while seaction < classOffers:
+        for j in range(teachers[i].seaction):
+            classlist.append(Classes(classNum,teachers[i].teach,areas))
+        seaction = seaction + teachers[i].seaction
+        i = i +1
+    return classlist
+
