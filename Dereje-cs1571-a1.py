@@ -79,24 +79,6 @@ def scheduleCourses(file, slots):
     csp_list.display()
         #classList[index].display()
         #index = index + 1
-
-class Sections:
-    def __init__(self, teach):
-        self.teach = teach
-        self.section = 0
-    def display(self):
-        print("Professor {} sections {}".format(self.teach, self.section))
-
-class Classes:
-    def __init__(self,classNum, teacher,section, area):
-        self.classNum = classNum
-        self.teacher = teacher
-        self.section = section
-        self.area = area
-
-
-
-
 def getClasses(line):
     start = 0
     location = line.find(';', start)
@@ -114,12 +96,12 @@ def getClasses(line):
     teachNum = 0
     teachLoc = line.find(',',start,location)
     while teachLoc != -1:
-        teachers.append(Sections(line[start:teachLoc]))
+        teachers.append(csp.Sections(line[start:teachLoc]))
         start = teachLoc + 1
         teachLoc = line.find(',', start, location)
         teachNum = teachNum + 1
 
-    teachers.append(Sections(line[start:location]))
+    teachers.append(csp.Sections(line[start:location]))
     start = location + 1
     teachNum = teachNum + 1
 
@@ -142,7 +124,7 @@ def getClasses(line):
     classlist = []
     for i in range(len(teachers)):
         for j in range(teachers[i].section):
-            classlist.append(Classes(classNum,teachers[i].teach,j,areas))
+            classlist.append(csp.Classes(classNum,teachers[i].teach,j,areas))
     return classlist
 
 def findPath(interOne, interTwo, aglor):

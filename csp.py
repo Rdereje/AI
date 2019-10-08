@@ -1442,7 +1442,19 @@ def class_constraints(A, a, B, b):
             if place in classList[A].area:
                 return False
     return True
+class Sections:
+    def __init__(self, teach):
+        self.teach = teach
+        self.section = 0
+    def display(self):
+        print("Professor {} sections {}".format(self.teach, self.section))
 
+class Classes:
+    def __init__(self,classNum, teacher,section, area):
+        self.classNum = classNum
+        self.teacher = teacher
+        self.section = section
+        self.area = area
 classList = None
 
 class ClassProblem(CSP):
@@ -1451,10 +1463,12 @@ class ClassProblem(CSP):
         domains = {}
         for var in range(len(classList)):
             domains[var] = set(range(1, 10))
+        self.domains = domains
         CSP.__init__(self, list(range(len(classList))), domains, list(range(len(classList))), class_constraints)
 
     def display(self):
         for i in self.variables:
+            print("display please")
             aClass = classList[i]
             print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section))
-            print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, self.domain[i]))
+            print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, self.domains[i]))
