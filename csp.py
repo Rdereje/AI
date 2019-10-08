@@ -3,7 +3,7 @@ import string
 from operator import eq, neg
 
 
-from utils import argmin_random_tie, count, first, extend
+from utils import argmin_random_tie, count, first, extend, argmax_random_tie
 import search
 
 from collections import defaultdict, Counter
@@ -12,7 +12,6 @@ from functools import reduce
 import itertools
 import re
 import random
-
 
 class CSP(search.Problem):
     """This class describes finite-domain Constraint Satisfaction Problems.
@@ -80,7 +79,7 @@ class CSP(search.Problem):
         # Subclasses may implement this more efficiently
         def conflict(var2):
             return (var2 in assignment and
-                    not self.constraints(var, val, var2, assignment[var2]))
+                    not self.constraints(var, val, var2, assignment[var2]))  #control f here
 
         return count(conflict(v) for v in self.neighbors[var])
 
@@ -339,6 +338,11 @@ def mrv(assignment, csp):
         key=lambda var: num_legal_values(csp, var, assignment))
 
 
+def lcvar(assignment,csp):
+    return argmax_random_tie([v for v in csp.variables if v not in assignment],
+                             key=lambda var:num_legal_values(csp,var,assignment))
+
+
 def num_legal_values(csp, var, assignment):
     if csp.curr_domains:
         return len(csp.curr_domains[var])
@@ -359,6 +363,8 @@ def lcv(var, assignment, csp):
     """Least-constraining-values heuristic."""
     return sorted(csp.choices(var),
                   key=lambda val: csp.nconflicts(var, val, assignment))
+def mcval(var, assignment, csp):
+    return sorted(csp.choices(var), key=lambda val: csp.nconflicts(var, val, assignment), reverse=True)
 
 
 # Inference
@@ -808,17 +814,20 @@ class Sudoku(CSP):
             raise ValueError("Not a Sudoku grid", grid)  # Too many squares
         CSP.__init__(self, None, domains, self.neighbors, different_values_constraint)
 
+    def getNodesCreated(self):
+        return nodesCreated
+
     def display(self, assignment):
-        def show_box(box): return [' '.join(map(show_cell, row)) for row in box]
+        def show_box(box):
+            return [''.join(map(show_cell, row)) for row in box]
 
-        def show_cell(cell): return str(assignment.get(cell, '.'))
+        def show_cell(cell):
+            return str(assignment.get(cell, '.'))
 
-        def abut(lines1, lines2): return list(
-            map(' | '.join, list(zip(lines1, lines2))))
+        def abut(lines1, lines2):
+            return list(map(''.join, list(zip(lines1, lines2))))
 
-        print('\n------+-------+------\n'.join(
-            '\n'.join(reduce(
-                abut, map(show_box, brow))) for brow in self.bgrid))
+        return ''.join(''.join(reduce(abut, map(show_box, brow))) for brow in self.bgrid)
 
 
 # ______________________________________________________________________________
@@ -1425,3 +1434,27 @@ send_more_money = NaryCSP({'S': set(range(1, 10)), 'M': set(range(1, 10)),
                            Constraint(('E', 'O', 'N', 'C2', 'C3'), lambda e, o, n, c2, c3: c2 + e + o == n + 10 * c3),
                            Constraint(('S', 'M', 'O', 'C3', 'C4'), lambda s, m, o, c3, c4: c3 + s + m == o + 10 * c4),
                            Constraint(('M', 'C4'), eq)])
+def class_constraints(A, a, B, b):
+    if a == b:
+        if classList[A].classNum == classList[B].classNum or classList[A].teach == classList[B].teach:
+            return False
+        for place in classList[B].area:
+            if place in classList[A].area:
+                return False
+    return True
+
+classList = None
+
+class ClassProblem(CSP):
+    def __init__(self, classes,slots):
+        classList = classes
+        domains = {}
+        for var in range(len(classList)):
+            domains[var] = set(range(1, 10))
+        CSP.__init__(self, list(range(len(classList))), domains, list(range(len(classList))), class_constraints)
+
+    def display(self):
+        for i in self.variables:
+            aClass = classList[i]
+            print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section))
+            print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, self.domain[i]))

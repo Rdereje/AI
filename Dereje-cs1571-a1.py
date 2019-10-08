@@ -1,12 +1,23 @@
 import search
 import csp
+import time
 
 
 def sudokuSolver(line, algor):
+
     if algor == "backtracking":
         puzzle = csp.Sudoku(line)
-        csp.backtracking_search(puzzle, select_unassigned_variable=csp.mrv, inference=csp.forward_checking)
-        puzzle.display(puzzle.infer_assignment())
+        start = time.time()
+        csp.backtracking_search(puzzle, select_unassigned_variable=csp.mrv,order_domain_values=csp.lcv, inference=csp.forward_checking)
+        #csp.backtracking_search(puzzle, select_unassigned_variable=csp.lcvar, order_domain_values=csp.mcval, inference=csp.forward_checking)
+        #csp.backtracking_search(puzzle,inference=csp.forward_checking)
+        end = (time.time() - start)
+        hope = str(puzzle.display(puzzle.infer_assignment()))
+        f = open("sudoku.txt", "a+")
+        f.write("solution for {} with {} is {}\n".format(line, algor, hope))
+        f.write("completed in {} with {} nodes\n".format(end, puzzle.nassigns))
+        f.write("")
+        f.close()
     else:
         if len(line) == 16:
             size = 4
@@ -23,16 +34,35 @@ def sudokuSolver(line, algor):
                     board[i][j] = int(line[c])
                 c = c + 1
 
-        if len(line) == 16:
-            sudoku = search.Problem(board, [1, 2, 3, 4])
-        else:
-            sudoku = search.Problem(board, [1, 2, 3, 4, 5, 6, 7, 8, 9])
         if algor == "bfs":
-            pie = search.breadth_first_tree_search(sudoku)
+            if len(line) == 16:
+                sudoku = search.Sudoku(board, [1, 2, 3, 4])
+            else:
+                sudoku = search.Sudoku(board, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+            start = time.time()
+            pie, nodesCreated,maxNodes = search.breadth_first_tree_search(sudoku)
+            end = (time.time() - start)
         else:
-            pie = search.depth_first_tree_search(sudoku)
-        for row in pie.state:
-            print(row)
+            if len(line) == 16:
+                sudoku = search.Sudoku(board, [1, 2, 3, 4])
+            else:
+                sudoku = search.Sudoku(board, [9, 8, 7, 6, 5, 4, 3, 2, 1])
+            start = time.time()
+            pie, nodesCreated,maxNodes = search.depth_first_tree_search(sudoku)
+            end = (time.time() - start)
+
+        f = open("sudoku.txt", "a+")
+
+
+        sol = ""
+        n = len(pie.state)
+        for i in range(n):
+            for j in range(n):
+                sol = sol+str(pie.state[i][j])
+        f.write("solution for {} with {} is {}\n".format(line, algor,sol))
+        f.write("With {} nodes created, with at most {} in memory, and {} to complete\n".format(nodesCreated,maxNodes,end))
+        f.write("")
+        f.close()
 
 
 def scheduleCourses(file, slots):
@@ -43,7 +73,10 @@ def scheduleCourses(file, slots):
         offers = getClasses(line)
         for j in offers:
             classList.append(j)
-    print(len(classList))
+    csp_list = csp.ClassProblem(classList,slots)
+    csp_list.display()
+    csp.backtracking_search(csp_list, select_unassigned_variable=csp.mrv, inference=csp.forward_checking)
+    csp_list.display()
         #classList[index].display()
         #index = index + 1
 
@@ -55,14 +88,13 @@ class Sections:
         print("Professor {} sections {}".format(self.teach, self.section))
 
 class Classes:
-    def __init__(self,classNum, teacher, area):
+    def __init__(self,classNum, teacher,section, area):
         self.classNum = classNum
         self.teacher = teacher
+        self.section = section
         self.area = area
 
-    def display(self):
-        print("Class Number {}, teacher {}".format(self.classNum, self.teacher))
-        print(self.areas)
+
 
 
 def getClasses(line):
@@ -106,14 +138,11 @@ def getClasses(line):
         if '\n' in lastLoc:
             lastLoc = lastLoc[:len(lastLoc)-1]
         areas.append(lastLoc)
-    seaction = 0
-    i = 0
+
     classlist = []
-    while seaction < classOffers:
-        for j in range(teachers[i].seaction):
-            classlist.append(Classes(classNum,teachers[i].teach,areas))
-        seaction = seaction + teachers[i].seaction
-        i = i +1
+    for i in range(len(teachers)):
+        for j in range(teachers[i].section):
+            classlist.append(Classes(classNum,teachers[i].teach,j,areas))
     return classlist
 
 def findPath(interOne, interTwo, aglor):

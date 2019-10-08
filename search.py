@@ -25,35 +25,41 @@ infinity = float('inf')
 
 
 class Problem(object):
+
     """The abstract class for a formal problem. You should subclass
     this and implement the methods actions and result, and possibly
     __init__, goal_test, and path_cost. Then you will create instances
     of your subclass and solve them with the various search functions."""
 
-    def __init__(self, initial, domain, goal=None):
+    def __init__(self, initial, goal=None):
         """The constructor specifies the initial state, and possibly a goal
         state, if there is a unique goal. Your subclass's constructor can add
         other arguments."""
         self.initial = initial
-        self.domain = domain
         self.goal = goal
 
     def actions(self, state):
-        return [val for val in self.domain]
+        """Return the actions that can be executed in the given
+        state. The result would typically be a list, but if there are
+        many actions, consider yielding them one at a time in an
+        iterator, rather than building them all at once."""
+        raise NotImplementedError
 
-    def result(self, state, r, c, action):
+    def result(self, state, action):
         """Return the state that results from executing the given
         action in the given state. The action must be one of
         self.actions(state)."""
-        state[r][c] = action
-        return state
+        raise NotImplementedError
 
-    def goal_test(self, node):
-        r, c = node.next_empty_var()
-        if r == -1:
-            return True
+    def goal_test(self, state):
+        """Return True if the state is a goal. The default method compares the
+        state to self.goal or checks for state in self.goal if it is a
+        list, as specified in the constructor. Override this method if
+        checking against a single self.goal is not enough."""
+        if isinstance(self.goal, list):
+            return is_in(state, self.goal)
         else:
-            return False
+            return state == self.goal
 
     def path_cost(self, c, state1, action, state2):
         """Return the cost of a solution path that arrives at state2 from
@@ -81,7 +87,7 @@ class Node_Sudoku:
     an explanation of how the f and h values are handled. You will not need to
     subclass this class."""
 
-    def __init__(self, state, parent=None, action=None, path_cost=0, r=0, c=0):
+    def __init__(self, state, parent=None, action=None, path_cost=0, r=-1, c=-1):
         """Create a search tree Node, derived from a parent by an action."""
         self.state = state
         self.parent = parent
@@ -90,7 +96,7 @@ class Node_Sudoku:
         self.depth = 0
         self.r = r
         self.c = c
-        if r == 0 and c == 0:
+        if r == -1 and c == -1:
             (r, c) = self.next_empty_var()
         self.r = r
         self.c = c
@@ -106,6 +112,7 @@ class Node_Sudoku:
     def expand(self, problem):
         """List the nodes reachable in one step from this node."""
         (r, c) = self.next_empty_var()
+
         return [self.child_node(problem, action, r, c)
                 for action in problem.actions(self.state)]
 
@@ -139,7 +146,7 @@ class Node_Sudoku:
         blockc = (self.c // div) * div
         for i in range(blockr, blockr + div):
             for j in range(blockc, blockc + div):
-                if self.state == value and (i != self.r and j != self.c):
+                if self.state[i][j] == value and (i != self.r and j != self.c):
                     return False
         return True
 
@@ -155,6 +162,9 @@ class Node_Sudoku:
         table = self.state
         r = self.r
         c = self.c
+        if r is -1:
+            r = 0
+            c = 0
         end = False
         size = len(table)
         if r >= size - 1 and c >= size - 1:
@@ -294,13 +304,15 @@ def breadth_first_tree_search(problem):
 
     frontier = deque([Node_Sudoku(problem.initial)])  # FIFO queue
     nodesCreated = len(frontier)
+    nodeMax = len(frontier)
     while frontier:
         node = frontier.popleft()
         nodesCurrent = len(frontier)
+        if nodeMax < nodesCurrent:
+            nodeMax = nodesCurrent
         if node.playable():
             if problem.goal_test(node):
-                print(nodesCreated)
-                return node
+                return node, nodesCreated, nodeMax
             frontier.extend(node.expand(problem))
             newNodes = len(frontier)
             nodesCreated = nodesCreated + (newNodes - nodesCurrent)
@@ -315,13 +327,15 @@ def depth_first_tree_search(problem):
 
     frontier = [Node_Sudoku(problem.initial)]  # Stack
     nodesCreated = len(frontier)
+    nodeMax = nodesCreated
     while frontier:
         node = frontier.pop()
         nodesCurrent = len(frontier)
+        if nodeMax < nodesCurrent:
+            nodeMax = nodesCurrent
         if node.playable():
             if problem.goal_test(node):
-                print(nodesCreated)
-                return node
+                return node, nodesCreated, nodeMax
             frontier.extend(node.expand(problem))
             newNodes = len(frontier)
             nodesCreated = nodesCreated + (newNodes - nodesCurrent)
@@ -529,6 +543,33 @@ def astar_search(problem, h=None):
 
 # ______________________________________________________________________________
 # A* heuristics 
+class Sudoku(Problem):
+
+    def __init__(self, initial, domain, goal=None):
+        """The constructor specifies the initial state, and possibly a goal
+        state, if there is a unique goal. Your subclass's constructor can add
+        other arguments."""
+        self.initial = initial
+        self.domain = domain
+        self.goal = goal
+        Problem.__init__(self, initial, goal)
+
+    def actions(self, state):
+        return [val for val in self.domain]
+
+    def result(self, state, r, c, action):
+        """Return the state that results from executing the given
+        action in the given state. The action must be one of
+        self.actions(state)."""
+        state[r][c] = action
+        return state
+
+    def goal_test(self, node):
+        r, c = node.next_empty_var()
+        if r == -1:
+            return True
+        else:
+            return False
 
 class EightPuzzle(Problem):
     """ The problem of sliding tiles numbered from 1 to 8 on a 3x3 board,
@@ -1680,3 +1721,4 @@ def compare_graph_searchers():
                                 GraphProblem('Q', 'WA', australia_map)],
                       header=['Searcher', 'romania_map(Arad, Bucharest)',
                               'romania_map(Oradea, Neamt)', 'australia_map'])
+

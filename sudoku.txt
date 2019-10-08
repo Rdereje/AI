@@ -1,0 +1,24 @@
+solution for ...1.13..32.2... with backtracking is 3241413213242413
+completed in 0.0009980201721191406 with 31 nodes
+solution for 4.2.2.3..4...24. with backtracking is 4321213434121243
+completed in 0.001994609832763672 with 36 nodes
+solution for .3..4..32.313.2. with backtracking is 1342421324313124
+completed in 0.0009968280792236328 with 28 nodes
+solution for ...1.13..32.2... with backtracking is 3241413213242413
+completed in 0.0 with 23 nodes
+solution for 4.2.2.3..4...24. with backtracking is 4321213434121243
+completed in 0.0 with 22 nodes
+solution for .3..4..32.313.2. with backtracking is 1342421324313124
+completed in 0.0 with 18 nodes
+solution for ...1.13..32.2... with backtracking is 3241413213242413
+completed in 0.0009975433349609375 with 23 nodes
+solution for .3..4..32.313.2. with backtracking is 1342421324313124
+completed in 0.0 with 18 nodes
+solution for 4.2.2.3..4...24. with backtracking is 4321213434121243
+completed in 0.0 with 22 nodes
+solution for .3..4..32.313.2. with backtracking is 1342421324313124
+completed in 0.000995635986328125 with 18 nodes
+solution for 4.2.2.3..4...24. with backtracking is 4321213434121243
+completed in 0.0 with 22 nodes
+solution for 4.2.2.3..4...24. with backtracking is 4321213434121243
+completed in 0.0009646415710449219 with 22 nodes
