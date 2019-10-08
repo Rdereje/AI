@@ -65,23 +65,33 @@ def sudokuSolver(line, algor):
         f.close()
 
 
+class Classes:
+    def __init__(self,classNum, teacher,section, area):
+        self.classNum = classNum
+        self.teacher = teacher
+        self.section = section
+        self.area = area
+
 def scheduleCourses(file, slots):
-    index = 0
     f = open(file, 'r')
     classList = []
+
     for line in f.readlines():
         offers = getClasses(line)
         for j in offers:
             classList.append(j)
+
+    f.close()
     csp_list = csp.ClassProblem(classList,slots)
     csp_list.display()
-    csp.backtracking_search(csp_list, select_unassigned_variable=csp.mrv, inference=csp.forward_checking)
-    csp_list.display()
-        #classList[index].display()
-        #index = index + 1
+    csp.backtracking_search(csp_list, select_unassigned_variable=csp.mrv, order_domain_values=csp.lcv, inference=csp.mac)
+    csp_list.display(csp_list.infer_assignment())
+
+
 def getClasses(line):
+    line = line.replace(" ", "")
     start = 0
-    location = line.find(';', start)
+    location = line.find(';')
     classNum = line[start:location]
 
     start = location + 1
@@ -91,22 +101,23 @@ def getClasses(line):
 
     start = start + 6
     teachers = []
+    sections = []
     location = line.find(';',start)
 
     teachNum = 0
     teachLoc = line.find(',',start,location)
     while teachLoc != -1:
-        teachers.append(csp.Sections(line[start:teachLoc]))
+        teachers.append(line[start:teachLoc])
         start = teachLoc + 1
         teachLoc = line.find(',', start, location)
         teachNum = teachNum + 1
 
-    teachers.append(csp.Sections(line[start:location]))
+    teachers.append(line[start:location])
     start = location + 1
     teachNum = teachNum + 1
 
     for i in range(teachNum):
-        teachers[i].seaction = int(line[start])
+        sections.append(int(line[start]))
         start = start+2
     end = len(line)
     areas = []
@@ -121,11 +132,11 @@ def getClasses(line):
             lastLoc = lastLoc[:len(lastLoc)-1]
         areas.append(lastLoc)
 
-    classlist = []
+    classSec = []
     for i in range(len(teachers)):
-        for j in range(teachers[i].section):
-            classlist.append(csp.Classes(classNum,teachers[i].teach,j,areas))
-    return classlist
+        for j in range(sections[i]):
+            classSec.append(Classes(classNum,teachers[i],j,areas))
+    return classSec
 
 def findPath(interOne, interTwo, aglor):
     return False

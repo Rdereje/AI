@@ -168,10 +168,12 @@ def dom_j_up(csp, queue):
     return SortedSet(queue, key=lambda t: neg(len(csp.curr_domains[t[1]])))
 
 
-def AC3(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
+
+def AC3(csp, queue=None, removals=None, arc_heuristic=no_arc_heuristic):
     """[Figure 6.3]"""
     if queue is None:
         queue = {(Xi, Xk) for Xi in csp.variables for Xk in csp.neighbors[Xi]}
+        print(len(queue))
     csp.support_pruning()
     queue = arc_heuristic(csp, queue)
     while queue:
@@ -199,7 +201,7 @@ def revise(csp, Xi, Xj, removals):
 # Constraint Propagation with AC-3b: an improved version of AC-3 with
 # double-support domain-heuristic
 
-def AC3b(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
+def AC3b(csp, queue=None, removals=None, arc_heuristic=no_arc_heuristic):
     if queue is None:
         queue = {(Xi, Xk) for Xi in csp.variables for Xk in csp.neighbors[Xi]}
     csp.support_pruning()
@@ -330,12 +332,17 @@ def first_unassigned_variable(assignment, csp):
     """The default variable order."""
     return first([var for var in csp.variables if var not in assignment])
 
-
-def mrv(assignment, csp):
+def degree():
+    return False
+def mrv(assignment, csp,arc = None):
     """Minimum-remaining-values heuristic."""
-    return argmin_random_tie(
+    if arc is None:
+        return argmin_random_tie(
         [v for v in csp.variables if v not in assignment],
         key=lambda var: num_legal_values(csp, var, assignment))
+    else:
+        degree()
+        #[v for v in csp.variables if v not in assignment], key = lambda var: num_legal_values(csp, var, assignment))
 
 
 def lcvar(assignment,csp):
@@ -387,7 +394,7 @@ def forward_checking(csp, var, value, assignment, removals):
     return True
 
 
-def mac(csp, var, value, assignment, removals, constraint_propagation=AC3b):
+def mac(csp, var, value, assignment, removals, constraint_propagation=AC3):
     """Maintain arc consistency."""
     return constraint_propagation(csp, {(X, var) for X in csp.neighbors[var]}, removals)
 
@@ -814,8 +821,6 @@ class Sudoku(CSP):
             raise ValueError("Not a Sudoku grid", grid)  # Too many squares
         CSP.__init__(self, None, domains, self.neighbors, different_values_constraint)
 
-    def getNodesCreated(self):
-        return nodesCreated
 
     def display(self, assignment):
         def show_box(box):
@@ -1435,40 +1440,46 @@ send_more_money = NaryCSP({'S': set(range(1, 10)), 'M': set(range(1, 10)),
                            Constraint(('S', 'M', 'O', 'C3', 'C4'), lambda s, m, o, c3, c4: c3 + s + m == o + 10 * c4),
                            Constraint(('M', 'C4'), eq)])
 def class_constraints(A, a, B, b):
+    global classList
     if a == b:
-        if classList[A].classNum == classList[B].classNum or classList[A].teach == classList[B].teach:
+        if str(classList[A].classNum) == str(classList[B].classNum) or str(classList[A].teacher) == str(classList[B].teacher):
             return False
         for place in classList[B].area:
             if place in classList[A].area:
                 return False
     return True
-class Sections:
-    def __init__(self, teach):
-        self.teach = teach
-        self.section = 0
-    def display(self):
-        print("Professor {} sections {}".format(self.teach, self.section))
 
-class Classes:
-    def __init__(self,classNum, teacher,section, area):
-        self.classNum = classNum
-        self.teacher = teacher
-        self.section = section
-        self.area = area
-classList = None
+classList = []
 
 class ClassProblem(CSP):
     def __init__(self, classes,slots):
+        global classList
         classList = classes
         domains = {}
         for var in range(len(classList)):
-            domains[var] = set(range(1, 10))
-        self.domains = domains
-        CSP.__init__(self, list(range(len(classList))), domains, list(range(len(classList))), class_constraints)
+            domains[var] = set(range(slots))
 
-    def display(self):
+        size = len(classList)
+        self.variables = list(range(size))
+        neighborsDict = {}
+
+        for i in range(size):
+            k = 0
+            neighbors = []
+            for j in range(size-1):
+                if k == i:
+                    k = k+1
+                neighbors.append(k)
+                k = k + 1
+            neighborsDict[i] = neighbors
+
+        CSP.__init__(self, self.variables, domains, neighborsDict, class_constraints)
+
+    def display(self, assignment=None):
+        global classList
         for i in self.variables:
-            print("display please")
             aClass = classList[i]
-            print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section))
-            print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, self.domains[i]))
+            if assignment is not None:
+                print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, (assignment[i])))
+            else:
+                print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, self.domains[i]))
