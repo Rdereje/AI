@@ -9,3 +9,6 @@ CS1666;Principles of Computer Game Design and Implementation;1;0;0;N. Farnan;1;
 CS1674;Introduction to Computer Vision;1;0;0;A. Kovashka;1;AI,DS
 CS1566;Introduction to Computer Graphics;1;0;0;T. Kosiyatrakul;1;
 CS1571;Introduction to Artificial Intelligence;1;0;0;E. Walker;1;AI,DS
+CS1621;Structure Programming Languages;1;0;0;Y. Zhang;1;
+CS1555;Database Management Systems;1;0;2;P. Chrysanthis;1;BU,SE,SEC,DS
+CS1510;Algorithm Design;1;1;0;K. Pruhs;1;AI,SE

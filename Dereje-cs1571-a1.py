@@ -83,8 +83,7 @@ def scheduleCourses(file, slots):
 
     f.close()
     csp_list = csp.ClassProblem(classList,slots)
-    csp_list.display()
-    csp.backtracking_search(csp_list, select_unassigned_variable=csp.mrv, order_domain_values=csp.lcv, inference=csp.mac)
+    csp.backtracking_search(csp_list, select_unassigned_variable=csp.mrv, order_domain_values=csp.lcv, arc=csp.degree,inference=csp.mac)
     csp_list.display(csp_list.infer_assignment())
 
 

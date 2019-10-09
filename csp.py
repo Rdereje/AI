@@ -3,7 +3,7 @@ import string
 from operator import eq, neg
 
 
-from utils import argmin_random_tie, count, first, extend, argmax_random_tie
+from utils import argmin_random_tie, count, first, extend, argmax_random_tie, identity
 import search
 
 from collections import defaultdict, Counter
@@ -332,17 +332,51 @@ def first_unassigned_variable(assignment, csp):
     """The default variable order."""
     return first([var for var in csp.variables if var not in assignment])
 
-def degree():
-    return False
-def mrv(assignment, csp,arc = None):
+def degree(assignment, csp):
+    dict = {}
+    min_values = []
+    minValue = -1
+    for var in csp.variables:
+        if var not in assignment:
+            dict[var] = num_legal_values(csp,var,assignment)
+    sortedDict = [(v, dict[v]) for v in sorted(dict,key=dict.get)]
+    for key in sortedDict:
+        if minValue == -1:
+            minValue = key[1]
+            min_values.append(key[0])
+        elif minValue == key[1]:
+            min_values.append(key[0])
+        else:
+            break
+
+    #min_values contains the variables that we would get from mrv, but least all variables that tie
+    most_conflicts = -1
+    index = 0
+    for var in min_values:
+        conflicts = 0
+        for var2 in csp.neighbors[var]:
+            if var2 not in assignment:
+                found = -1
+                if not csp.curr_domains:
+                    return var
+                for val in csp.curr_domains[var]:
+                    if val in csp.curr_domains[var2] and found is -1:
+                        found = 1
+                        if not csp.constraints(var, val, var2, val):
+                            conflicts = conflicts + 1
+        if conflicts > most_conflicts:
+            most_conflicts = conflicts
+            index = var
+
+    return index
+
+def mrv(assignment, csp, arc = argmin_random_tie):
     """Minimum-remaining-values heuristic."""
-    if arc is None:
-        return argmin_random_tie(
-        [v for v in csp.variables if v not in assignment],
+    if arc == argmin_random_tie:
+        return arc([v for v in csp.variables if v not in assignment],
         key=lambda var: num_legal_values(csp, var, assignment))
     else:
-        degree()
-        #[v for v in csp.variables if v not in assignment], key = lambda var: num_legal_values(csp, var, assignment))
+        return arc(assignment,csp)
 
 
 def lcvar(assignment,csp):
@@ -405,13 +439,13 @@ def mac(csp, var, value, assignment, removals, constraint_propagation=AC3):
 def backtracking_search(csp,
                         select_unassigned_variable=first_unassigned_variable,
                         order_domain_values=unordered_domain_values,
-                        inference=no_inference):
+                        inference=no_inference, arc = argmin_random_tie):
     """[Figure 6.5]"""
 
     def backtrack(assignment):
         if len(assignment) == len(csp.variables):
             return assignment
-        var = select_unassigned_variable(assignment, csp)
+        var = select_unassigned_variable(assignment, csp,arc)
         for value in order_domain_values(var, assignment, csp):
             if 0 == csp.nconflicts(var, value, assignment):
                 csp.assign(var, value, assignment)
