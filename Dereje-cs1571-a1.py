@@ -138,16 +138,40 @@ def getClasses(line):
     return classSec
 
 def findPath(interOne, interTwo, aglor):
-    distance_dict = {}
+    distance_list = []
     elevation_dict = {}
     distance_file = open("partC-distances.txt", 'r')
+    for line in distance_file.readlines():
+        inter1,inter2,distance = getDisInfo(line)
+        distance_list.append(distanceEdge(inter1,inter2,distance))
     distance_file.close()
     location_file = open("partC-intersections.txt", 'r')
     for line in location_file.readlines():
         key,value = elevation(line)
         elevation_dict[key] = int(value)
     location_file.close()
-    return False
+    path_problem = getPath(interOne,interTwo,distance_list,elevation_dict)
+    goal_node = search.astar_search(path_problem)
+    print(goal_node.path_cost)
+    path = goal_node.path()
+    for street in path:
+        print(street.state)
+
+def getDisInfo(line):
+    start = 0
+    middle = line.find(',',start)
+    end = line.find(',',middle+1)
+    inter1 = line[start:end]
+    start = end+1
+    middle = line.find(',',start)
+    end = line.find(',',middle+1)
+    inter2 = line[start:end]
+    start = end+1
+    string_dis = line[start:]
+    if '\n' in string_dis:
+        string_dis = string_dis[:len(string_dis) - 1]
+    float_dis = float(string_dis)
+    return inter1,inter2,float_dis
 def elevation(line):
     start = 0
     middle = line.find(',')
@@ -162,14 +186,54 @@ def elevation(line):
     if '\n' in elevation:
         elevation = elevation[:len(elevation) - 1]
     return key,elevation
+class distanceEdge():
+    def __init__(self,inter1,inter2,distance):
+        self.inter1 = inter1
+        self.inter2 = inter2
+        self.distance = distance
+    def display(self):
+        print("{} - {} - {}".format(self.inter1,self.inter2,self.distance))
+    def connectionsInfo(self, intersection):
+        if self.inter1 == intersection:
+            return self.inter2, self.distance
+        if self.inter2 == intersection:
+            return self.inter1, self.distance
+    def isConnected(self,intersection):
+        if self.inter1 == intersection or self.inter2 == intersection:
+            return True
+        return False
+class getPath(search.Problem):
 
-class findPathProblem(search.Problem):
-
-    def __init__(self,initial,goal,distance_dict,elevation_dict):
+    def __init__(self,initial,goal,distance_list,elevation_dict):
         self.initial = initial
         self.goal = goal
-        self.distance_dict = distance_dict
+        self.distance_list = distance_list
         self.elevation_dict = elevation_dict
+
+        search.Problem.__init__(self, initial, goal)
+
+    def actions(self, state):
+        connected_location = []
+        for edges in self.distance_list:
+            if edges.isConnected(state):
+                connected_location.append(edges)
+        return connected_location
+
+    def result(self,state,action):
+        next_state,distance = action.connectionsInfo(state)
+        return next_state
+    def goal_test(self, state):
+        return state == self.goal
+    def path_cost(self,c, state1,action,state2):
+        next_state , distance = action.connectionsInfo(state1)
+        return c + distance
+    def h(self, node):
+        """ Return the heuristic value for a given state."""
+        current_elevation = self.elevation_dict[node.state]
+        goal_elevation = self.elevation_dict[self.goal]
+        difference = (goal_elevation - current_elevation)/10 #if current intersection is going downhill than decrease distance
+
+        return difference
 
     
 
