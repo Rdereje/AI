@@ -138,6 +138,38 @@ def getClasses(line):
     return classSec
 
 def findPath(interOne, interTwo, aglor):
+    distance_dict = {}
+    elevation_dict = {}
+    distance_file = open("partC-distances.txt", 'r')
+    distance_file.close()
+    location_file = open("partC-intersections.txt", 'r')
+    for line in location_file.readlines():
+        key,value = elevation(line)
+        elevation_dict[key] = int(value)
+    location_file.close()
     return False
+def elevation(line):
+    start = 0
+    middle = line.find(',')
+    end = line.find(',',middle+1)
+    key = line[start:end]
+    start = end+1
+    end = line.find(',',start)
+    start = end+1
+    end = line.find(',',start)
+    start = end+1
+    elevation = line[start:]
+    if '\n' in elevation:
+        elevation = elevation[:len(elevation) - 1]
+    return key,elevation
+
+class findPathProblem(search.Problem):
+
+    def __init__(self,initial,goal,distance_dict,elevation_dict):
+        self.initial = initial
+        self.goal = goal
+        self.distance_dict = distance_dict
+        self.elevation_dict = elevation_dict
+
     
 
