@@ -1511,9 +1511,12 @@ class ClassProblem(CSP):
 
     def display(self, assignment=None):
         global classList
+        f = open("scheduleCourses.txt", "w+")
         for i in self.variables:
             aClass = classList[i]
             if assignment is not None:
+                f.write("{}-{}-{}, {}\n".format(aClass.classNum, aClass.teacher, aClass.section, (assignment[i])))
                 print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, (assignment[i])))
             else:
                 print("{}-{}-{}, {}".format(aClass.classNum, aClass.teacher, aClass.section, self.domains[i]))
+        f.close()

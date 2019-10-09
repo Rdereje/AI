@@ -1,0 +1,15 @@
+CS1622-V.Petrucci-0, 0
+CS1632-D.Ahn-0, 0
+CS1632-D.Ahn-1, 1
+CS1640-L.Nunes-0, 2
+CS1645-K.Kosta-0, 1
+CS1652-J.Lange-0, 3
+CS1653-W.Garritson-0, 4
+CS1656-A.Labrindis-0, 2
+CS1666-N.Farnan-0, 3
+CS1674-A.Kovashka-0, 0
+CS1566-T.Kosiyatrakul-0, 4
+CS1571-E.Walker-0, 3
+CS1621-Y.Zhang-0, 5
+CS1555-P.Chrysanthis-0, 1
+CS1510-K.Pruhs-0, 2
