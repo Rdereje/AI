@@ -1,7 +1,8 @@
 import search
 import csp
 import time
-
+#my code class_constraints, ClassProblem(CSP),  degree(assignment, csp), lcvar(assignment,csp), mcval(var, assignment, csp): are in csp.py file
+#class Node_Sudoku: and class Sudoku(Problem): is in search.py
 
 def sudokuSolver(line, algor):
 
@@ -154,8 +155,13 @@ def findPath(interOne, interTwo, aglor):
     goal_node = search.astar_search(path_problem)
     print(goal_node.path_cost)
     path = goal_node.path()
+    f = open("Navigating Around Campus.txt", "w+")
     for street in path:
-        print(street.state)
+        f.write("{},".format(street.state))
+        print(street.state, end = ",")
+    f.write("{}\n".format(goal_node.path_cost*10))
+    f.close()
+    print(goal_node.path_cost*10)
 
 def getDisInfo(line):
     start = 0
@@ -231,7 +237,7 @@ class getPath(search.Problem):
         """ Return the heuristic value for a given state."""
         current_elevation = self.elevation_dict[node.state]
         goal_elevation = self.elevation_dict[self.goal]
-        difference = (goal_elevation - current_elevation)/10 #if current intersection is going downhill than decrease distance
+        difference = (goal_elevation - current_elevation)/100 #if current intersection is going downhill than decrease distance
 
         return difference
 

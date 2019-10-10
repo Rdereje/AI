@@ -346,15 +346,15 @@ def degree(assignment, csp):
             min_values.append(key[0])
         elif minValue == key[1]:
             min_values.append(key[0])
-        else:
+        else:#since this is sorted once the value doesn't equal the current min that means the rest will not and we can stop
             break
 
-    #min_values contains the variables that we would get from mrv, but least all variables that tie
+    #min_values contains the variables that we would get from mrv, will give us all the variables that tie
     most_conflicts = -1
     index = 0
     for var in min_values:
         conflicts = 0
-        for var2 in csp.neighbors[var]:
+        for var2 in csp.neighbors[var]: #compares all neighbors for var that are not in assignment
             if var2 not in assignment:
                 found = -1
                 if not csp.curr_domains:
@@ -363,8 +363,8 @@ def degree(assignment, csp):
                     if val in csp.curr_domains[var2] and found is -1:
                         found = 1
                         if not csp.constraints(var, val, var2, val):
-                            conflicts = conflicts + 1
-        if conflicts > most_conflicts:
+                            conflicts = conflicts + 1 #everytime var constraits if will increase the number of conflicts it has with other variables
+        if conflicts > most_conflicts: #whichever variable has the most conflicts will be the var that is returned
             most_conflicts = conflicts
             index = var
 
@@ -378,7 +378,7 @@ def mrv(assignment, csp, arc = argmin_random_tie):
     else:
         return arc(assignment,csp)
 
-
+#reverse of mrv
 def lcvar(assignment,csp):
     return argmax_random_tie([v for v in csp.variables if v not in assignment],
                              key=lambda var:num_legal_values(csp,var,assignment))
@@ -404,6 +404,7 @@ def lcv(var, assignment, csp):
     """Least-constraining-values heuristic."""
     return sorted(csp.choices(var),
                   key=lambda val: csp.nconflicts(var, val, assignment))
+#reverse of lcv
 def mcval(var, assignment, csp):
     return sorted(csp.choices(var), key=lambda val: csp.nconflicts(var, val, assignment), reverse=True)
 
