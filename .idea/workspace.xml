@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e4e24e82-34f8-4c42-82ac-fcc2fc14222e" name="Default Changelist" comment="" />
+    <list default="true" id="e4e24e82-34f8-4c42-82ac-fcc2fc14222e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/AI.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AI.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

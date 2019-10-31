@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logic
-from utils import expr, Expre
+from utils import expr
+import planning
 
 """ A2 Part A
 
@@ -15,25 +16,65 @@ from utils import expr, Expre
     Feel free to refactor the code to move M1 through M8 into a class, but the function call and return values should remain as specified below for our grading.
 """
 
-M1='Correct. Keep up the good work!'
-M2='Correct. I think you’re getting it!'
-M3='Correct. After this problem we can switch to a new problem.'
-M4='Incorrect. Keep trying and I’m sure you’ll get it!'
-M5='Incorrect. After this problem, we can switch to a new activity.'
-M6='Incorrect. The following is the correct answer to the problem.'
-M7='Correct.'
-M8='Incorrect.'
-feedbackKB = logic.PropDefiniteKB()
-for s in "C==>(1|2|3|7); ~C==>(4|5|6|8); M&(I|S)==>B; (N&I)==>6; (I&C)|(M&S)==>N; N==>(2|4);B==>(3|5);S|(N&C)==>1".split(';'):
+M1 = 'Correct. Keep up the good work!'
+M2 = 'Correct. I think you’re getting it!'
+M3 = 'Correct. After this problem we can switch to a new problem.'
+M4 = 'Incorrect. Keep trying and I’m sure you’ll get it!'
+M5 = 'Incorrect. After this problem, we can switch to a new activity.'
+M6 = 'Incorrect. The following is the correct answer to the problem.'
+M7 = 'Correct.'
+M8 = 'Incorrect.'
+feedbackKB = logic.PropKB()
+for s in "C==>(1|2|3|7); ~C==>(4|5|6|8); M&(I|S)==>B; (N&I)==>6; (I&C)|(M&S)==>N; N==>(2|4);B==>(3|5);S|(N&C)==>1".split(
+        ';'):
     feedbackKB.tell(expr(s))
+
+
 def giveFeedback(studentState):
+    expression = []
+    if studentState.find("CorrectAnswer") == -1:
+        expression.append("~C")
+        feedbackKB.tell(expr("~C"))
+    else:
+        expression.append("C")
+        feedbackKB.tell(expr("C"))
+    if studentState.find("NewSkill") != -1:
+        expression.append("N")
+        feedbackKB.tell(expr("N"))
+    if studentState.find("MasteredSkill") != -1:
+        expression.append(expr("M"))
+        feedbackKB.tell("M")
+    if studentState.find("CorrectStreak") != -1:
+        expression.append("S")
+        feedbackKB.tell(expr("S"))
+    if studentState.find("IncorrectStreak") != -1:
+        expression.append("I")
+        feedbackKB.tell(expr("I"))
+    M = 1
+    while (M < 9 and not logic.pl_resolution(feedbackKB, expr(str(M)))):
+        M = M + 1
+    for c in expression:
+        feedbackKB.retract(expr(c))
+    if M is 1:
+        return M1
+    elif M is 2:
+        return M2
+    elif M is 3:
+        return M3
+    elif M is 4:
+        return M4
+    elif M is 5:
+        return M5
+    elif M is 6:
+        return M6
+    elif M is 7:
+        return M7
+    elif M is 8:
+        return M8
+    else:
+        return "error"
 
 
-
-    feedbackMessage = M1
-    return feedbackMessage
- 
-    
 """ A2 Part B
 
     solveEquation is a function that converts a string representation of an equation to a first-order logic representation, and then
@@ -49,13 +90,51 @@ def giveFeedback(studentState):
 SAMPLE_EQUATION = '3x-2=6'
 SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
+
 def solveEquation(equation):
+    PlanningProblem(initial='On(A, Table) & On(B, Table) & On(C, A) & Clear(B) & Clear(C)',
+                    goals='On(A, B) & On(B, C)',
+                    actions=[Action('Move(b, x, y)',
+                                    precond='On(b, x) & Clear(b) & Clear(y)',
+                                    effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
+                                    domain='Block(b) & Block(y)'),
+                             Action('MoveToTable(b, x)',
+                                    precond='On(b, x) & Clear(b)',
+                                    effect='On(b, Table) & Clear(x) & ~On(b, x)',
+                                    domain='Block(b) & Block(x)')],
+                    domain='Block(A) & Block(B) & Block(C)')
+    initialString = ''
+    fol =[]
+    middle = equation.find('=')
+    xLoc = equation.find('x')
+    term = ""
+    for i in range(middle+1):
+        if equation[i].isdigit():
+            if len(term) is 0 and i > 0 and equation[i - 1] == '-':
+                term = term + '-'
+            term = term + equation[i]
+        elif len(term) > 0:
+            fol.append("Left(" +term+ ")")
+            if i == xLoc:
+                fol.append("Variable("+term+")")
+                xLoc = equation.find('x',xLoc+1)
+            else:
+                fol.append("Constant("+term+")")
+            term=""
+    end = len(equation)
+    term = ""
+    i = middle+1
+    while(i < end):
+
+
+
+
+    planningEquation = planning.PlanningProblem(initial='', goals='Left(x)&Right()&Variable()')
+
     plan = SAMPLE_ACTION_PLAN
     return plan
 
-   
- 
-    
+
 """ A2 Part C
 
     predictSuccess is a function that takes in a list of skills students have and an equation to be solved, and returns the skills
@@ -70,15 +149,16 @@ def solveEquation(equation):
     missing_skills: A list of skills students need to solve the problem, represented by S1 through S9.
     
 """
-CURRENT_SKILLS = ['S8','S9']
+CURRENT_SKILLS = ['S8', 'S9']
 EQUATION = '3x+2=8'
-SAMPLE_MISSING_SKILLS = ['S4','S5']
+SAMPLE_MISSING_SKILLS = ['S4', 'S5']
+
 
 def predictSuccess(current_skills, equation):
     missing_skills = SAMPLE_MISSING_SKILLS
     return missing_skills
 
-   
+
 """ A2 Part D
 
     stepThroughProblem is a function that takes a problem, a student action, and a list of current student skills, and returns
@@ -95,15 +175,13 @@ def predictSuccess(current_skills, equation):
     updated_skills: A list of skills students have after executing the action.
     
 """
-CURRENT_SKILLS = ['S8','S9']
+CURRENT_SKILLS = ['S8', 'S9']
 EQUATION = '3x+2=8'
 ACTION = 'add -2'
-UPDATED_SKILLS = ['S8','S9','S4']
+UPDATED_SKILLS = ['S8', 'S9', 'S4']
+
 
 def stepThroughProblem(equation, action, current_skills):
     feedback_message = M1
     updated_skills = UPDATED_SKILLS
-    return [feedback_message,updated_skills]
-                                
-                             
-
+    return [feedback_message, updated_skills]
