@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logic
 from utils import expr
-import planning
+from planning import Action
 
 """ A2 Part A
 
@@ -24,20 +24,27 @@ M5 = 'Incorrect. After this problem, we can switch to a new activity.'
 M6 = 'Incorrect. The following is the correct answer to the problem.'
 M7 = 'Correct.'
 M8 = 'Incorrect.'
-feedbackKB = logic.PropKB()
-for s in "C==>(1|2|3|7); ~C==>(4|5|6|8); M&(I|S)==>B; (N&I)==>6; (I&C)|(M&S)==>N; N==>(2|4);B==>(3|5);S|(N&C)==>1".split(
-        ';'):
+#1 = R
+#2 = U
+#3 = T
+#4 = H
+#5 = D
+#6 = E
+#7 = J
+#8 = A
+feedbackKB = logic.PropDefiniteKB()
+for s in "C==>J; Z==>A;(M & I)==>B; (M & S)==>B; (N&I&Z)==>E; (N&S)==>N;(I&C)==>N; (N&C)==>U;(N&Z)==>H;(B&C)==>T; (B&Z)==>D;(N&C)==>R; (S&C)==>R".split(';'):
     feedbackKB.tell(expr(s))
 
 
 def giveFeedback(studentState):
     expression = []
     if studentState.find("CorrectAnswer") == -1:
-        expression.append("~C")
-        feedbackKB.tell(expr("~C"))
+        expression.append('Z')
+        feedbackKB.tell(expr('Z'))
     else:
-        expression.append("C")
-        feedbackKB.tell(expr("C"))
+        expression.append('C')
+        feedbackKB.tell(expr('C'))
     if studentState.find("NewSkill") != -1:
         expression.append("N")
         feedbackKB.tell(expr("N"))
@@ -50,26 +57,27 @@ def giveFeedback(studentState):
     if studentState.find("IncorrectStreak") != -1:
         expression.append("I")
         feedbackKB.tell(expr("I"))
-    M = 1
-    while (M < 9 and not logic.pl_resolution(feedbackKB, expr(str(M)))):
-        M = M + 1
+    M = ['R','U','T','H', 'D', 'E', 'J','A']
+    i = 0
+    while (i < 8 and not logic.pl_fc_entails(feedbackKB, expr(M[i]))):
+        i = i + 1
     for c in expression:
         feedbackKB.retract(expr(c))
-    if M is 1:
+    if i is 0:
         return M1
-    elif M is 2:
+    elif i is 1:
         return M2
-    elif M is 3:
+    elif i is 2:
         return M3
-    elif M is 4:
+    elif i is 3:
         return M4
-    elif M is 5:
+    elif i is 4:
         return M5
-    elif M is 6:
+    elif i is 5:
         return M6
-    elif M is 7:
+    elif i is 6:
         return M7
-    elif M is 8:
+    elif i is 7:
         return M8
     else:
         return "error"
@@ -92,48 +100,92 @@ SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 
 def solveEquation(equation):
-    PlanningProblem(initial='On(A, Table) & On(B, Table) & On(C, A) & Clear(B) & Clear(C)',
-                    goals='On(A, B) & On(B, C)',
-                    actions=[Action('Move(b, x, y)',
-                                    precond='On(b, x) & Clear(b) & Clear(y)',
-                                    effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
-                                    domain='Block(b) & Block(y)'),
-                             Action('MoveToTable(b, x)',
-                                    precond='On(b, x) & Clear(b)',
-                                    effect='On(b, Table) & Clear(x) & ~On(b, x)',
-                                    domain='Block(b) & Block(x)')],
-                    domain='Block(A) & Block(B) & Block(C)')
-    initialString = ''
-    fol =[]
+    #PlanningProblem(initial='On(A, Table) & On(B, Table) & On(C, A) & Clear(B) & Clear(C)',
+     #               goals='On(A, B) & On(B, C)',
+      #              actions=[Action('Move(b, x, y)',
+       #                             precond='On(b, x) & Clear(b) & Clear(y)',
+        #                            effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
+         #                           domain='Block(b) & Block(y)'),
+          #                   Action('MoveToTable(b, x)',
+           #                         precond='On(b, x) & Clear(b)',
+            #                        effect='On(b, Table) & Clear(x) & ~On(b, x)',
+             #                       domain='Block(b) & Block(x)')],
+              #      domain='Block(A) & Block(B) & Block(C)')
+
+    initial = ''
     middle = equation.find('=')
-    xLoc = equation.find('x')
-    term = ""
-    for i in range(middle+1):
-        if equation[i].isdigit():
-            if len(term) is 0 and i > 0 and equation[i - 1] == '-':
-                term = term + '-'
-            term = term + equation[i]
-        elif len(term) > 0:
-            fol.append("Left(" +term+ ")")
-            if i == xLoc:
-                fol.append("Variable("+term+")")
-                xLoc = equation.find('x',xLoc+1)
-            else:
-                fol.append("Constant("+term+")")
-            term=""
     end = len(equation)
-    term = ""
-    i = middle+1
-    while(i < end):
+    num = ""
+    leftcount = 0
+    rightcount = 0
+    for i in range(end):
+        if len(num) == 0 and equation[i] == '-':
+            num = equation[i]
+        elif equation[i].isdigit():
+            num = num+equation[i]
+        elif equation[i] == 'x':
+            if i < middle or i == middle:
+                side = 'Left'
+                if leftcount == 0:
+                    var = 'A'
+                    leftcount = leftcount + 1
+                else:
+                    var = 'B'
+            else:
+                side = 'Right'
+                if rightcount == 0:
+                    var = 'C'
+                    rightcount = rightcount + 1
+                else:
+                    var = 'D'
+            if len(num) == 0:
+                num = '1'
+                initial = initial + ' & isOne('+var+')'
+            initial = initial + ' & Contains('+side+',  '+var+') & Variable('+var+') & Value('+var+',' +num+')'
+            num=''
+        elif len(num) > 0 and not (equation[i].isdigit()):
+            if i < middle or i == middle:
+                side = 'Left'
+                if leftcount == 0:
+                    var = 'A'
+                    leftcount = leftcount + 1
+                else:
+                    var = 'B'
+            else:
+                side = 'Right'
+                if rightcount == 0:
+                    var = 'C'
+                    rightcount = rightcount + 1
+                else:
+                    var = 'D'
+            initial = initial +' & Contains('+side+', '+var+') & Constant(' + var + ') & Value('+var+', ' + num + ')'
+            num = ''
+            if equation[i] == '-':
+                num = '-'
+    if len(num) > 0:
+        if rightcount == 0:
+            var = 'C'
+        else:
+            var = 'D'
+        initial = initial + ' & Contains(Right, ' + var + ') & Constant(' + var + ') & Value('+var+', ' + num + ')'
+    initial = initial[3:]
+    goals = 'Contains(Left,X) & isOne(X) & Variable(X) & Contains(Right,Y) & Constant(Y)'
+    domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
+    actions=[Action('CombineRight(Right, a, b)',
+                    precond='Contains(Right, a) & Contains(Right, b) & Constant(a) & Constant (b)',
+                    effect='Contains(Right, Y) & Constant(Y) & Value(Y, )']
+    #planningEquation = planning.PlanningProblem(initial=initial, goals=goals,domain=domain)
 
-
-
-
-    planningEquation = planning.PlanningProblem(initial='', goals='Left(x)&Right()&Variable()')
-
-    plan = SAMPLE_ACTION_PLAN
+    plan = initial
     return plan
-
+ #              actions=[Action('Move(b, x, y)',
+       #                             precond='On(b, x) & Clear(b) & Clear(y)',
+        #                            effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
+         #                           domain='Block(b) & Block(y)'),
+          #                   Action('MoveToTable(b, x)',
+           #                         precond='On(b, x) & Clear(b)',
+            #                        effect='On(b, Table) & Clear(x) & ~On(b, x)',
+             #                       domain='Block(b) & Block(x)')],
 
 """ A2 Part C
 
