@@ -119,6 +119,7 @@ def solveEquation(equation):
     num = ""
     leftcount = 0
     rightcount = 0
+    domain=''
     for i in range(end):
         if len(num) == 0 and equation[i] == '-':
             num = equation[i]
@@ -143,6 +144,7 @@ def solveEquation(equation):
                 num = '1'
                 initial = initial + ' & isOne('+num+')'
             initial = initial + ' & Contains('+side+',  '+num+') & Variable('+num+')'
+            domain = domain + " & Variable("+num+")"
             num=''
         elif len(num) > 0 and not (equation[i].isdigit()):
             if i < middle or i == middle:
@@ -160,6 +162,7 @@ def solveEquation(equation):
                 else:
                     var = 'D'
             initial = initial +' & Contains('+side+', '+num+') & Constant(' + num + ')'
+            domain = domain + ' & Constant('+num+')'
             num = ''
             if equation[i] == '-':
                 num = '-'
@@ -168,18 +171,22 @@ def solveEquation(equation):
             var = 'C'
         else:
             var = 'D'
-        initial = initial + ' & Contains(Right, '+num+') & Constant(' + num + ')'
+        initial = initial + ' & Contains(Right, '+num+') & Constant(' + num + ') & NotContains(Right, 3)'
+        domain = domain + ' & Constant('+num+')'
     initial = initial[3:]
+    domain = domain[3:]
     initial = initial + ' & Contains(Y, Left)'
     goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Y, Right) & Constant(Y)'
-    domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
-    actions=[Action('AddRight(Right, Left, a)',
+    #domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
+    actions=[Action('AddRight(a)',
                     precond='Contains(Left, a)',
-                    effect='Contains(Right, a)')]
+                    effect='Contains(Right, a) & ~Contains(Left, a)',
+                    domain='Constant(a)')]
     planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions,domain=domain)
 
     plan = initial
     print(plan)
+    print(domain)
     return planningEquation
  #              actions=[Action('Move(b, x, y)',
        #                             precond='On(b, x) & Clear(b) & Clear(y)',

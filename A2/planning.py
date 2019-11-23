@@ -258,6 +258,7 @@ class Action:
                 new_clause = Expr('Not' + clause.op, *clause.args)
 
                 if kb.ask(self.substitute(new_clause, args)) is not False:
+                    print(new_clause)
                     kb.retract(self.substitute(new_clause, args))
 
         return kb
