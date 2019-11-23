@@ -2,6 +2,7 @@
 import logic
 from utils import expr
 from planning import Action
+import planning
 
 """ A2 Part A
 
@@ -140,8 +141,8 @@ def solveEquation(equation):
                     var = 'D'
             if len(num) == 0:
                 num = '1'
-                initial = initial + ' & isOne('+var+')'
-            initial = initial + ' & Contains('+side+',  '+var+') & Variable('+var+') & Value('+var+',' +num+')'
+                initial = initial + ' & isOne('+num+')'
+            initial = initial + ' & Contains('+side+',  '+num+') & Variable('+num+')'
             num=''
         elif len(num) > 0 and not (equation[i].isdigit()):
             if i < middle or i == middle:
@@ -158,7 +159,7 @@ def solveEquation(equation):
                     rightcount = rightcount + 1
                 else:
                     var = 'D'
-            initial = initial +' & Contains('+side+', '+var+') & Constant(' + var + ') & Value('+var+', ' + num + ')'
+            initial = initial +' & Contains('+side+', '+num+') & Constant(' + num + ')'
             num = ''
             if equation[i] == '-':
                 num = '-'
@@ -167,17 +168,19 @@ def solveEquation(equation):
             var = 'C'
         else:
             var = 'D'
-        initial = initial + ' & Contains(Right, ' + var + ') & Constant(' + var + ') & Value('+var+', ' + num + ')'
+        initial = initial + ' & Contains(Right, '+num+') & Constant(' + num + ')'
     initial = initial[3:]
-    goals = 'Contains(Left,X) & isOne(X) & Variable(X) & Contains(Right,Y) & Constant(Y)'
+    initial = initial + ' & Contains(Y, Left)'
+    goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Y, Right) & Constant(Y)'
     domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
-    actions=[Action('CombineRight(Right, a, b)',
-                    precond='Contains(Right, a) & Contains(Right, b) & Constant(a) & Constant (b)',
-                    effect='Contains(Right, Y) & Constant(Y) & Value(Y, )']
-    #planningEquation = planning.PlanningProblem(initial=initial, goals=goals,domain=domain)
+    actions=[Action('AddRight(Right, Left, a)',
+                    precond='Contains(Left, a)',
+                    effect='Contains(Right, a)')]
+    planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions,domain=domain)
 
     plan = initial
-    return plan
+    print(plan)
+    return planningEquation
  #              actions=[Action('Move(b, x, y)',
        #                             precond='On(b, x) & Clear(b) & Clear(y)',
         #                            effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
