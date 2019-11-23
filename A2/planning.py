@@ -248,21 +248,29 @@ class Action:
         if not self.check_precond(kb, args):
             raise Exception('Action pre-conditions not satisfied')
         for clause in self.effect:
+            print('Not maybe')
+            print(clause)
             kb.tell(self.substitute(clause, args))
+            print('we shall see')
             print(clause)
             if clause.op[:3] == 'Not':
                 print('how')
                 print(clause)
                 new_clause = Expr(clause.op[3:], *clause.args)
-
+                print('i understand nothing')
+                print(kb.ask(self.substitute(new_clause, args)))
                 if kb.ask(self.substitute(new_clause, args)) is not False:
                     kb.retract(self.substitute(new_clause, args))
             else:
                 new_clause = Expr('Not' + clause.op, *clause.args)
-
-                if kb.ask(self.substitute(new_clause, args)) is not False:
+                print('isFalse')
+                print(new_clause)
+                print('i understand nothing part 2')
+                print(kb.ask(self.substitute(new_clause, args)))
+                if kb.ask(self.substitute(new_clause, args)) is False:
+                    print('nope')
                     print(new_clause)
-                    kb.retract(self.substitute(new_clause, args))
+                    kb.retract(self.substitute(Expr(clause.op[3:], *clause.args), args))
 
         return kb
 

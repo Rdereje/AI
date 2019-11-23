@@ -143,7 +143,11 @@ def solveEquation(equation):
             if len(num) == 0:
                 num = '1'
                 initial = initial + ' & isOne('+num+')'
-            initial = initial + ' & Contains('+num+',  '+side+') & Variable('+num+')'
+            if side == 'Right':
+                otherSide = 'Left'
+            else:
+                otherSide = 'Right'
+            initial = initial + ' & Contains('+side+',  '+num+') & Variable('+num+')'
             domain = domain + " & Variable("+num+")"
             num=''
         elif len(num) > 0 and not (equation[i].isdigit()):
@@ -161,7 +165,11 @@ def solveEquation(equation):
                     rightcount = rightcount + 1
                 else:
                     var = 'D'
-            initial = initial +' & Contains('+num+', '+side+') & Constant(' + num + ')'
+            if side == 'Right':
+                otherSide = 'Left'
+            else:
+                otherSide = 'Right'
+            initial = initial +' & Contains('+side+', '+num+') & Constant(' + num + ')'
             domain = domain + ' & Constant('+num+')'
             num = ''
             if equation[i] == '-':
@@ -171,18 +179,27 @@ def solveEquation(equation):
             var = 'C'
         else:
             var = 'D'
-        initial = initial + ' & Contains('+num+', Right) & Constant(' + num + ') & NotContains(Right, 3)'
+        initial = initial + ' & Contains(Right, '+num+') & Constant(' + num + ')'
         domain = domain + ' & Constant('+num+')'
     initial = initial[3:]
     domain = domain[3:]
     initial = initial + ' & Contains(Y, Left)'
-    goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Y, Right) & Constant(Y)'
+    goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Right, Y) & Constant(Y)'
+    goals='Contains(Right, Y) & Constant(Y)'
     #domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
     actions=[Action('AddRight(a)',
-                    precond='Contains(a, Left)',
-                    effect='Contains(a, Right) & ~Contains(a, Left)',
-                    domain='Constant(a)')]
-    planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions,domain=domain)
+                    precond='Contains(Left, a) & Constant(a)',
+                    effect='Contains(Right, a) & ~Contains(Left, a)'),
+             Action('AddLeft(a)',
+                    precond='Contains(Right, a) & Variable(a)',
+                    effect='Contains(Left, a) & ~Contains(Right, a)'),
+             Action('CombineLeft(a,b)',
+                    precond='Contains(Left, a) & Contains(Left, b) & Variable(a) & Variable(b)',
+                    effect='Contains(Left, a + b) & Contains(Left, X) & ~Contains(Left, a) & ~Contains(Left, b) & ~Variable(a) & ~Variable(b)'),
+             Action('CombineRight(a, b)',
+                    precond='Contains(Right, a) & Contains(Right, b) & Constant(a) & Constant(b)',
+                    effect='Contains(Right, a+b), ~Contains(Right, b) & ~Contains(Right, a) & ~Constant(a) & ~Constant(b) & Contains(Right, Y) & Constant(Y)')]
+    planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions)
 
     plan = initial
     print(plan)
