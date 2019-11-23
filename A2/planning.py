@@ -249,7 +249,10 @@ class Action:
             raise Exception('Action pre-conditions not satisfied')
         for clause in self.effect:
             kb.tell(self.substitute(clause, args))
+            print(clause)
             if clause.op[:3] == 'Not':
+                print('how')
+                print(clause)
                 new_clause = Expr(clause.op[3:], *clause.args)
 
                 if kb.ask(self.substitute(new_clause, args)) is not False:

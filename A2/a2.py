@@ -143,7 +143,7 @@ def solveEquation(equation):
             if len(num) == 0:
                 num = '1'
                 initial = initial + ' & isOne('+num+')'
-            initial = initial + ' & Contains('+side+',  '+num+') & Variable('+num+')'
+            initial = initial + ' & Contains('+num+',  '+side+') & Variable('+num+')'
             domain = domain + " & Variable("+num+")"
             num=''
         elif len(num) > 0 and not (equation[i].isdigit()):
@@ -161,7 +161,7 @@ def solveEquation(equation):
                     rightcount = rightcount + 1
                 else:
                     var = 'D'
-            initial = initial +' & Contains('+side+', '+num+') & Constant(' + num + ')'
+            initial = initial +' & Contains('+num+', '+side+') & Constant(' + num + ')'
             domain = domain + ' & Constant('+num+')'
             num = ''
             if equation[i] == '-':
@@ -171,7 +171,7 @@ def solveEquation(equation):
             var = 'C'
         else:
             var = 'D'
-        initial = initial + ' & Contains(Right, '+num+') & Constant(' + num + ') & NotContains(Right, 3)'
+        initial = initial + ' & Contains('+num+', Right) & Constant(' + num + ') & NotContains(Right, 3)'
         domain = domain + ' & Constant('+num+')'
     initial = initial[3:]
     domain = domain[3:]
@@ -179,8 +179,8 @@ def solveEquation(equation):
     goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Y, Right) & Constant(Y)'
     #domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
     actions=[Action('AddRight(a)',
-                    precond='Contains(Left, a)',
-                    effect='Contains(Right, a) & ~Contains(Left, a)',
+                    precond='Contains(a, Left)',
+                    effect='Contains(a, Right) & ~Contains(a, Left)',
                     domain='Constant(a)')]
     planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions,domain=domain)
 
