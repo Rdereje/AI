@@ -33,26 +33,35 @@ M8 = 'Incorrect.'
 #6 = E
 #7 = J
 #8 = A
-feedbackKB = logic.PropDefiniteKB()
-for s in "C==>J; Z==>A;(M & I)==>B; (M & S)==>B; (N&I&Z)==>E; (N&S)==>N;(I&C)==>N; (N&C)==>U;(N&Z)==>H;(B&C)==>T; (B&Z)==>D;(N&C)==>R; (S&C)==>R".split(';'):
+feedbackKB = logic.PropKB()
+for s in "C==>(J); ~C==>(A); (M&(I|S)&C)==>T;(M&(I|S)&~C)==>D; ((N|(I&~M))&~C)==>E; ((I&C&~M)|(N&S&C))==>U; (N&S&~C)==>H; (~M&(S^N)&C)==>R".split(';'):
     feedbackKB.tell(expr(s))
 
 
 def giveFeedback(studentState):
     expression = []
-    if studentState.find("CorrectAnswer") == -1:
-        expression.append('Z')
-        feedbackKB.tell(expr('Z'))
+    if studentState.find("CorrectAnswer") == -1 or studentState.find("IncorrectAnswer") != -1:
+        expression.append('~C')
+        feedbackKB.tell(expr('~C'))
     else:
         expression.append('C')
         feedbackKB.tell(expr('C'))
-    if studentState.find("NewSkill") != -1:
+    if studentState.find("NewSkill") == -1:
+        expression.append("~N")
+        feedbackKB.tell(expr("~N"))
+    else:
         expression.append("N")
         feedbackKB.tell(expr("N"))
-    if studentState.find("MasteredSkill") != -1:
+    if studentState.find("MasteredSkill") == -1:
+        expression.append(expr("~M"))
+        feedbackKB.tell("~M")
+    else:
         expression.append(expr("M"))
         feedbackKB.tell("M")
-    if studentState.find("CorrectStreak") != -1:
+    if studentState.find("CorrectStreak") == -1:
+        expression.append("~S")
+        feedbackKB.tell(expr("~S"))
+    else:
         expression.append("S")
         feedbackKB.tell(expr("S"))
     if studentState.find("IncorrectStreak") != -1:
@@ -60,7 +69,7 @@ def giveFeedback(studentState):
         feedbackKB.tell(expr("I"))
     M = ['R','U','T','H', 'D', 'E', 'J','A']
     i = 0
-    while (i < 8 and not logic.pl_fc_entails(feedbackKB, expr(M[i]))):
+    while i < 8 and not feedbackKB.ask_if_true(expr(M[i])):
         i = i + 1
     for c in expression:
         feedbackKB.retract(expr(c))
