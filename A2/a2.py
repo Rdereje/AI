@@ -133,6 +133,8 @@ def solveEquation(equation):
                 side = 'Right'
             if len(num) == 0:
                 num = 1
+            elif num == '-':
+                num = -1
             if side == 'Right':
                 Right['var'].append(int(num))
             else:
@@ -172,7 +174,7 @@ def solveEquation(equation):
             num = Right['var'].pop()
             num = num * -1
             Left['var'].append(num)
-            toSolve.append('add '+str(num))
+            toSolve.append('add '+str(num)+'x')
         elif len(Left['con']) > 0:
             num = Left['con'].pop()
             print(num)
@@ -204,10 +206,58 @@ def solveEquation(equation):
 CURRENT_SKILLS = ['S8', 'S9']
 EQUATION = '3x+2=8'
 SAMPLE_MISSING_SKILLS = ['S4', 'S5']
-
+def get_num(numberString):
+    num = ''
+    start = False
+    end = False
+    i = 0
+    while not end and i < len(numberString):
+        if numberString[i].isdigit():
+            start = True
+            num = num + numberString[i]
+        elif not numberString.isdigit() and start:
+            end = True
+        i = i + 1
+    return str(num)
 
 def predictSuccess(current_skills, equation):
 
+    skills_knowledge = logic.FolKB(map(expr, ['Positive(x) & Variable(x) ==>Add(x, S1)', 'Negative(x) & Variable(x) ==>Add(x, S2)', 'Positive(x) & Constant(x) ==>Add(x, S3)', 'Negative(x) & Constant(x) ==>Add(x, S4)',
+                                              'Positive(x)==>Divide(x, S5)', 'Negative(x)==>Divide(x, S6)', 'Constant(x) & Constant(y) ==>Combine(Constant, S9)',
+                                              'Positive(x) & Variable(x) & Positive(y) & Variable(y) ==>Combine(Variable, S7)']))
+    #,'Positive(x) & Variable(x) & Negative(y) & Variable(y) & Greater((y*-1)< x) ==>Combine(Variable, S7)'
+    actions_list = solveEquation(equation)
+    print(actions_list)
+    skills_needed = []
+    for action in actions_list:
+        if action.find('add') != -1:
+            num = get_num(action)
+            if action.find('-') == -1:
+                skills_knowledge.tell(expr('Positive('+num+')'))
+            else:
+                skills_knowledge.tell(expr('Negative('+num+')'))
+            if action.find('x') == -1:
+                skills_knowledge.tell(expr('Constant('+num+')'))
+            else:
+                skills_knowledge.tell(expr('Variable('+num+')'))
+            x = skills_knowledge.ask(expr('Add('+num+', y)'))[expr('y')]
+            skills_needed.append(str(x))
+        elif action.find('divide') != -1:
+            num = get_num(action)
+            if action.find('-') == -1:
+                skills_knowledge.tell(expr('Positive('+num+')'))
+            else:
+                skills_knowledge.tell(expr('Negative('+num+')'))
+            x = skills_knowledge.ask(expr('Divide(' + num + ', y)'))[expr('y')]
+            skills_needed.append(str(x))
+        elif action.find('constant') != -1:
+           x =  skills_knowledge.ask(expr('Combine(Constant, y)'))[expr('y')]
+           skills_needed.append(str(x))
+        elif action.find('variable') != -1:
+            x = skills_knowledge.ask(expr('Combine(Variable, z)'))[expr('z')]
+            skills_needed.append(str(x))
+
+    print(skills_needed)
     missing_skills = SAMPLE_MISSING_SKILLS
     return missing_skills
 
