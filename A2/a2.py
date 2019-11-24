@@ -4,6 +4,10 @@ from utils import expr
 from planning import Action
 import planning
 
+
+greater = {}
+def fol(equation):
+   return 0
 """ A2 Part A
 
     giveFeedback is a function that reads in a student state and returns a feedback message using propositional logic and proof by resolution. The rules
@@ -162,6 +166,10 @@ def solveEquation(equation):
             for i in range(end):
                 num = num + Left['var'].pop()
             Left['var'].append(num)
+            if num < 0:
+                greater[1] = False
+            else:
+                greater[1] = True
             toSolve.append('combine LHS variable terms’')
         elif len(Right['con']) > 1:
             num = 0
@@ -221,14 +229,19 @@ def get_num(numberString):
     return str(num)
 
 def predictSuccess(current_skills, equation):
-
+    greater.clear()
     skills_knowledge = logic.FolKB(map(expr, ['Positive(x) & Variable(x) ==>Add(x, S1)', 'Negative(x) & Variable(x) ==>Add(x, S2)', 'Positive(x) & Constant(x) ==>Add(x, S3)', 'Negative(x) & Constant(x) ==>Add(x, S4)',
                                               'Positive(x)==>Divide(x, S5)', 'Negative(x)==>Divide(x, S6)', 'Constant(x) & Constant(y) ==>Combine(Constant, S9)',
-                                              'Positive(x) & Variable(x) & Positive(y) & Variable(y) ==>Combine(Variable, S7)']))
-    #,'Positive(x) & Variable(x) & Negative(y) & Variable(y) & Greater((y*-1)< x) ==>Combine(Variable, S7)'
+                                              'Greater(x)==>Combine(Variable, S7)', 'Lesser(x)==>Combine(Variable, S8)']))
+    #,
+
     actions_list = solveEquation(equation)
-    print(actions_list)
+    if greater[1]:
+        skills_knowledge.tell(expr('Greater(True)'))
+    else:
+        skills_knowledge.tell(expr('Lesser(True)'))
     skills_needed = []
+    x = ''
     for action in actions_list:
         if action.find('add') != -1:
             num = get_num(action)
@@ -241,7 +254,7 @@ def predictSuccess(current_skills, equation):
             else:
                 skills_knowledge.tell(expr('Variable('+num+')'))
             x = skills_knowledge.ask(expr('Add('+num+', y)'))[expr('y')]
-            skills_needed.append(str(x))
+
         elif action.find('divide') != -1:
             num = get_num(action)
             if action.find('-') == -1:
@@ -249,17 +262,17 @@ def predictSuccess(current_skills, equation):
             else:
                 skills_knowledge.tell(expr('Negative('+num+')'))
             x = skills_knowledge.ask(expr('Divide(' + num + ', y)'))[expr('y')]
-            skills_needed.append(str(x))
+
         elif action.find('constant') != -1:
            x =  skills_knowledge.ask(expr('Combine(Constant, y)'))[expr('y')]
-           skills_needed.append(str(x))
+
         elif action.find('variable') != -1:
             x = skills_knowledge.ask(expr('Combine(Variable, z)'))[expr('z')]
-            skills_needed.append(str(x))
-
-    print(skills_needed)
+        skill = str(x)
+        if current_skills.count(skill) == 0:
+            skills_needed.append(skill)
     missing_skills = SAMPLE_MISSING_SKILLS
-    return missing_skills
+    return skills_needed
 
 
 """ A2 Part D
