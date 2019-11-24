@@ -110,7 +110,6 @@ SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 
 def solveEquation(equation):
-    initial = ''
     middle = equation.find('=')
     end = len(equation)
     num = ""
@@ -122,7 +121,6 @@ def solveEquation(equation):
     Left['con'] = []
     leftcount = 0
     rightcount = 0
-    domain=''
     for i in range(end):
         if len(num) == 0 and equation[i] == '-':
             num = equation[i]
@@ -131,86 +129,63 @@ def solveEquation(equation):
         elif equation[i] == 'x':
             if i < middle or i == middle:
                 side = 'Left'
-                if leftcount == 0:
-                    var = 'A'
-                    leftcount = leftcount + 1
-                else:
-                    var = 'B'
             else:
                 side = 'Right'
-                if rightcount == 0:
-                    var = 'C'
-                    rightcount = rightcount + 1
-                else:
-                    var = 'D'
             if len(num) == 0:
-                num = '1'
-                #initial = initial + ' & isOne('+num+')'
+                num = 1
             if side == 'Right':
-                Right['var'].append(num)
+                Right['var'].append(int(num))
             else:
-                Left['var'].append(num)
-                otherSide = 'Right'
-            initial = initial + ' & Contains('+side+', '+num+') & Variable('+num+')'
-
-            domain = domain + " & Variable("+num+")"
+                Left['var'].append(int(num))
             num=''
         elif len(num) > 0 and not (equation[i].isdigit()):
             if i < middle or i == middle:
                 side = 'Left'
-                if leftcount == 0:
-                    var = 'A'
-                    leftcount = leftcount + 1
-                else:
-                    var = 'B'
             else:
                 side = 'Right'
-                if rightcount == 0:
-                    var = 'C'
-                    rightcount = rightcount + 1
-                else:
-                    var = 'D'
             if side == 'Right':
-                Right['con'].append(num)
+                Right['con'].append(int(num))
             else:
-                Left['con'].append(num)
-            initial = initial +' & Contains('+side+', '+num+') & Constant(' + num + ')'
-            domain = domain + ' & Constant('+num+')'
+                Left['con'].append(int(num))
             num = ''
             if equation[i] == '-':
                 num = '-'
     if len(num) > 0:
-        if rightcount == 0:
-            var = 'C'
-        else:
-            var = 'D'
-        initial = initial + ' & Contains(Right, '+num+') & Constant(' + num + ')'
-        Right['con'].append(num)
-        domain = domain + ' & Constant('+num+')'
-    initial = initial[3:]
-    domain = domain[3:]
-    #initial = initial + ' & Contains(Y, Left)'
-    #goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Right, Y) & Constant(Y)'
-    #goals='Contains(Right, Y) & Constant(Y)'
-    #domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
-    actions=[Action('AddRight(a)',
-                    precond='Contains(Left, a) & Constant(a)',
-                    effect='Contains(Right, a) & ~Contains(Left, a)',
-                    domain='Constant(a)')]
-    #planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions,domain=domain)
+        Right['con'].append(int(num))
+    toSolve =[]
+    while len(Right['var']) > 0 or len(Right['con']) != 1 or len(Left['var']) != 1 or len(Left['con']) > 0:
+        if len(Left['var']) > 1:
+            num = 0
+            end = len(Left['var'])
+            for i in range(end):
+                num = num + Left['var'].pop()
+            Left['var'].append(num)
+            toSolve.append('combine LHS variable terms’')
+        elif len(Right['con']) > 1:
+            num = 0
+            end = len(Right['con'])
+            for i in range(end):
+                num = num + Right['con'].pop()
+            Right['con'].append(num)
+            toSolve.append('combine RHS constant terms’')
+        elif len(Right['var']) > 0:
+            num = Right['var'].pop()
+            num = num * -1
+            Left['var'].append(num)
+            toSolve.append('add '+str(num))
+        elif len(Left['con']) > 0:
+            num = Left['con'].pop()
+            print(num)
+            num = num * -1
+            Right['con'].append(num)
+            toSolve.append('add ' + str(num))
+    if Left['var'][0] != 1:
+        num = Left['var'][0]
+        Left['var'][0] = 1
+        Right['con'][0] = Right['con'][0]/num
+        toSolve.append('divide '+str(num))
 
-    plan = initial
-    print(plan)
-    print(domain)
-    #return planningEquation
- #              actions=[Action('Move(b, x, y)',
-       #                             precond='On(b, x) & Clear(b) & Clear(y)',
-        #                            effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
-         #                           domain='Block(b) & Block(y)'),
-          #                   Action('MoveToTable(b, x)',
-           #                         precond='On(b, x) & Clear(b)',
-            #                        effect='On(b, Table) & Clear(x) & ~On(b, x)',
-             #                       domain='Block(b) & Block(x)')],
+    return toSolve
 
 """ A2 Part C
 
