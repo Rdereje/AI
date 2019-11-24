@@ -41,6 +41,7 @@ class PlanningProblem:
         new_clauses = []
         for clause in clauses:
             if clause.op == '~':
+                print('Stop')
                 new_clauses.append(expr('Not' + str(clause.args[0])))
             else:
                 new_clauses.append(clause)

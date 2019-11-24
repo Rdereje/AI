@@ -110,22 +110,16 @@ SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 
 def solveEquation(equation):
-    #PlanningProblem(initial='On(A, Table) & On(B, Table) & On(C, A) & Clear(B) & Clear(C)',
-     #               goals='On(A, B) & On(B, C)',
-      #              actions=[Action('Move(b, x, y)',
-       #                             precond='On(b, x) & Clear(b) & Clear(y)',
-        #                            effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
-         #                           domain='Block(b) & Block(y)'),
-          #                   Action('MoveToTable(b, x)',
-           #                         precond='On(b, x) & Clear(b)',
-            #                        effect='On(b, Table) & Clear(x) & ~On(b, x)',
-             #                       domain='Block(b) & Block(x)')],
-              #      domain='Block(A) & Block(B) & Block(C)')
-
     initial = ''
     middle = equation.find('=')
     end = len(equation)
     num = ""
+    Left = {}
+    Right = {}
+    Right['var'] =[]
+    Right['con'] = []
+    Left['var'] = []
+    Left['con'] = []
     leftcount = 0
     rightcount = 0
     domain=''
@@ -151,12 +145,14 @@ def solveEquation(equation):
                     var = 'D'
             if len(num) == 0:
                 num = '1'
-                initial = initial + ' & isOne('+num+')'
+                #initial = initial + ' & isOne('+num+')'
             if side == 'Right':
-                otherSide = 'Left'
+                Right['var'].append(num)
             else:
+                Left['var'].append(num)
                 otherSide = 'Right'
-            initial = initial + ' & Contains('+side+',  '+num+') & Variable('+num+')'
+            initial = initial + ' & Contains('+side+', '+num+') & Variable('+num+')'
+
             domain = domain + " & Variable("+num+")"
             num=''
         elif len(num) > 0 and not (equation[i].isdigit()):
@@ -175,9 +171,9 @@ def solveEquation(equation):
                 else:
                     var = 'D'
             if side == 'Right':
-                otherSide = 'Left'
+                Right['con'].append(num)
             else:
-                otherSide = 'Right'
+                Left['con'].append(num)
             initial = initial +' & Contains('+side+', '+num+') & Constant(' + num + ')'
             domain = domain + ' & Constant('+num+')'
             num = ''
@@ -189,31 +185,24 @@ def solveEquation(equation):
         else:
             var = 'D'
         initial = initial + ' & Contains(Right, '+num+') & Constant(' + num + ')'
+        Right['con'].append(num)
         domain = domain + ' & Constant('+num+')'
     initial = initial[3:]
     domain = domain[3:]
-    initial = initial + ' & Contains(Y, Left)'
-    goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Right, Y) & Constant(Y)'
-    goals='Contains(Right, Y) & Constant(Y)'
+    #initial = initial + ' & Contains(Y, Left)'
+    #goals = 'Contains(X, Right) & isOne(X) & Variable(X) & Contains(Right, Y) & Constant(Y)'
+    #goals='Contains(Right, Y) & Constant(Y)'
     #domain = 'Term(A) & Term(B) & Term(C) & Term(D) & Term(X) & Term(Y)'
     actions=[Action('AddRight(a)',
                     precond='Contains(Left, a) & Constant(a)',
-                    effect='Contains(Right, a) & ~Contains(Left, a)'),
-             Action('AddLeft(a)',
-                    precond='Contains(Right, a) & Variable(a)',
-                    effect='Contains(Left, a) & ~Contains(Right, a)'),
-             Action('CombineLeft(a,b)',
-                    precond='Contains(Left, a) & Contains(Left, b) & Variable(a) & Variable(b)',
-                    effect='Contains(Left, a + b) & Contains(Left, X) & ~Contains(Left, a) & ~Contains(Left, b) & ~Variable(a) & ~Variable(b)'),
-             Action('CombineRight(a, b)',
-                    precond='Contains(Right, a) & Contains(Right, b) & Constant(a) & Constant(b)',
-                    effect='Contains(Right, a+b), ~Contains(Right, b) & ~Contains(Right, a) & ~Constant(a) & ~Constant(b) & Contains(Right, Y) & Constant(Y)')]
-    planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions)
+                    effect='Contains(Right, a) & ~Contains(Left, a)',
+                    domain='Constant(a)')]
+    #planningEquation = planning.PlanningProblem(initial=initial, goals=goals,actions=actions,domain=domain)
 
     plan = initial
     print(plan)
     print(domain)
-    return planningEquation
+    #return planningEquation
  #              actions=[Action('Move(b, x, y)',
        #                             precond='On(b, x) & Clear(b) & Clear(y)',
         #                            effect='On(b, y) & Clear(x) & ~On(b, x) & ~Clear(y)',
@@ -243,6 +232,7 @@ SAMPLE_MISSING_SKILLS = ['S4', 'S5']
 
 
 def predictSuccess(current_skills, equation):
+
     missing_skills = SAMPLE_MISSING_SKILLS
     return missing_skills
 
