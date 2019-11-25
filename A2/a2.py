@@ -227,7 +227,7 @@ def solveEquation(equation):
         temp = num.pop(0)
         temp_t = num.pop(0)
         num.append(int(temp) + int(temp_t))
-        toSolve.append('combine LHS variable terms’')
+        toSolve.append('combine LHS variable terms')
     greater['1'] = num[0]
     divide = num[0]
     num.clear()
@@ -241,7 +241,7 @@ def solveEquation(equation):
         temp = num.pop(0)
         temp_t = num.pop(0)
         num.append(int(temp) + int(temp_t))
-        toSolve.append('combine RHS constant terms’')
+        toSolve.append('combine RHS constant terms')
     solve.tell(expr('Right(Constant, Y)'))
     solve.tell(expr('Value(Y, ' + str(num[0]) + ')'))
 
@@ -374,10 +374,15 @@ UPDATED_SKILLS = ['S8', 'S9', 'S4']
 
 actions_taken = []
 streak = 0
-
+current_equation = ''
 
 def stepThroughProblem(equation, action, current_skills):
+    global current_equation
     global streak
+    if current_equation != equation:
+        current_equation = equation
+        actions_taken.clear()
+        streak = 0
     message = ''
     current_action_needed = len(actions_taken)
 
