@@ -4,12 +4,15 @@ from utils import expr
 from planning import Action
 import planning
 
-
 greater = {}
+
+
 def fol(equation):
-    fol = []
+    fol_list = []
     middle = equation.find('=')
     end = len(equation)
+    symbol = 0
+    ch = ['A', 'B', 'C', 'D']
     num = ""
     for i in range(end):
         if len(num) == 0 and equation[i] == '-':
@@ -17,39 +20,42 @@ def fol(equation):
         elif equation[i].isdigit():
             num = num + equation[i]
         elif equation[i] == 'x':
-            if i < middle or i == middle:
+            if i < middle:
                 side = 'Left'
             else:
                 side = 'Right'
             if len(num) == 0:
-                num = 1
+                num = '1'
             elif num == '-':
-                num = -1
+                num = '-1'
             if side == 'Right':
-                fol.append('Right('+num+')')
-                fol.append('Variable('+num+')')
+                fol_list.append('Right(Variable, ' + ch[symbol] + ')')
+                fol_list.append('Value(' + ch[symbol] + ', ' + num + ')')
+                symbol = symbol + 1
             else:
-                fol.append('Left(' + num + ')')
-                fol.append('Variable(' + num + ')')
+                fol_list.append('Left(Variable, ' + ch[symbol] + ')')
+                fol_list.append('Value(' + ch[symbol] + ', ' + num + ')')
+                symbol = symbol + 1
             num = ''
         elif len(num) > 0 and not (equation[i].isdigit()):
             if i < middle or i == middle:
-                side = 'Left'
+                fol_list.append('Left(Constant, ' + ch[symbol] + ')')
+                fol_list.append('Value(' + ch[symbol] + ', ' + num + ')')
+                symbol = symbol + 1
             else:
-                side = 'Right'
-            if side == 'Right':
-                fol.append('Right(' + num + ')')
-                fol.append('Constant(' + num + ')')
-            else:
-                fol.append('Left(' + num + ')')
-                fol.append('Constant(' + num + ')')
+                fol_list.append('Right(Constant, ' + ch[symbol] + ')')
+                fol_list.append('Value(' + ch[symbol] + ', ' + num + ')')
+                symbol = symbol + 1
             num = ''
             if equation[i] == '-':
                 num = '-'
     if len(num) > 0:
-        fol.append('Right(' + num + ')')
-        fol.append('Constant(' + num + ')')
-    return fol
+        fol_list.append('Right(Constant, ' + ch[symbol] + ')')
+        fol_list.append('Value(' + ch[symbol] + ', ' + num + ')')
+        symbol = symbol + 1
+    return fol_list
+
+
 """ A2 Part A
 
     giveFeedback is a function that reads in a student state and returns a feedback message using propositional logic and proof by resolution. The rules
@@ -71,16 +77,17 @@ M5 = 'Incorrect. After this problem, we can switch to a new activity.'
 M6 = 'Incorrect. The following is the correct answer to the problem.'
 M7 = 'Correct.'
 M8 = 'Incorrect.'
-#1 = R
-#2 = U
-#3 = T
-#4 = H
-#5 = D
-#6 = E
-#7 = J
-#8 = A
+# 1 = R
+# 2 = U
+# 3 = T
+# 4 = H
+# 5 = D
+# 6 = E
+# 7 = J
+# 8 = A
 feedbackKB = logic.PropKB()
-for s in "C==>(J); ~C==>(A); (M&(I|S)&C)==>T;(M&(I|S)&~C)==>D; ((N|(I&~M))&~C)==>E; ((I&C&~M)|(N&S&C))==>U; (N&S&~C)==>H; (~M&(S^N)&C)==>R".split(';'):
+for s in "C==>(J); ~C==>(A); (M&(I|S)&C)==>T;(M&(I|S)&~C)==>D; ((N|(I&~M))&~C)==>E; ((I&C&~M)|(N&S&C))==>U; (N&S&~C)==>H; (~M&(S^N)&C)==>R".split(
+        ';'):
     feedbackKB.tell(expr(s))
 
 
@@ -113,7 +120,7 @@ def giveFeedback(studentState):
     if studentState.find("IncorrectStreak") != -1:
         expression.append("I")
         feedbackKB.tell(expr("I"))
-    M = ['R','U','T','H', 'D', 'E', 'J','A']
+    M = ['R', 'U', 'T', 'H', 'D', 'E', 'J', 'A']
     i = 0
     while i < 8 and not feedbackKB.ask_if_true(expr(M[i])):
         i = i + 1
@@ -154,91 +161,95 @@ def giveFeedback(studentState):
 SAMPLE_EQUATION = '3x-2=6'
 SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
+def create_fol():
+    solve = logic.FolKB()
+    solve.tell(expr('Left(Variable, a) & Left(Variable, b) ==> Left(Variable, X)'))
+    solve.tell(expr('Right(Constant, a) & Right(Constant, b) ==> Right(Constant, Y)'))
+    solve.tell(expr('Left(Variable, a) & Left(Variable, b) & Same(a!=b)==> RightVariableCombine(a,b)'))
+    solve.tell(expr('Right(Constant, a) & Right(Constant, b) ==> LeftVariableCombine(a,b)'))
+    return solve
+
+
+def combine(string, solve, term):
+    term_A = str(solve.ask(expr(string+', x)'))[expr('x')])
+    num_A = str(solve.ask(expr('Value(' + term_A + ', y)'))[expr('y')])
+    solve.retract(expr(string+', ' + term_A + ')'))
+    solve.retract(expr('Value(' + term_A + ', ' + num_A + ')'))
+
+    term_B = str(solve.ask(expr(string+', x)'))[expr('x')])
+    num_B = str(solve.ask(expr('Value(' + term_B + ', y)'))[expr('y')])
+    solve.retract(expr(string+', ' + term_B + ')'))
+    solve.retract(expr('Value(' + term_B + ', ' + num_B + ')'))
+
+    new_num = int(num_A) + int(num_B)
+    solve.tell(expr(string+', '+term+')'))
+    solve.tell(expr('Value('+term+',' + str(new_num) + ')'))
+
 
 def solveEquation(equation):
     greater.clear()
-   # print(fol(equation))
-    middle = equation.find('=')
-    end = len(equation)
-    num = ""
-    Left = {}
-    Right = {}
-    Right['var'] =[]
-    Right['con'] = []
-    Left['var'] = []
-    Left['con'] = []
-    leftcount = 0
-    rightcount = 0
-    for i in range(end):
-        if len(num) == 0 and equation[i] == '-':
-            num = equation[i]
-        elif equation[i].isdigit():
-            num = num+equation[i]
-        elif equation[i] == 'x':
-            if i < middle or i == middle:
-                side = 'Left'
-            else:
-                side = 'Right'
-            if len(num) == 0:
-                num = 1
-            elif num == '-':
-                num = -1
-            if side == 'Right':
-                Right['var'].append(int(num))
-            else:
-                Left['var'].append(int(num))
-            num=''
-        elif len(num) > 0 and not (equation[i].isdigit()):
-            if i < middle or i == middle:
-                side = 'Left'
-            else:
-                side = 'Right'
-            if side == 'Right':
-                Right['con'].append(int(num))
-            else:
-                Left['con'].append(int(num))
-            num = ''
-            if equation[i] == '-':
-                num = '-'
-    if len(num) > 0:
-        Right['con'].append(int(num))
-    toSolve =[]
-    while len(Right['var']) > 0 or len(Right['con']) != 1 or len(Left['var']) != 1 or len(Left['con']) > 0:
-        if len(Left['var']) > 1:
-            num = 0
-            end = len(Left['var'])
-            for i in range(end):
-                num = num + Left['var'].pop()
-            Left['var'].append(num)
-            if num < 0:
-                greater[1] = False
-            else:
-                greater[1] = True
-            toSolve.append('combine LHS variable terms’')
-        elif len(Right['con']) > 1:
-            num = 0
-            end = len(Right['con'])
-            for i in range(end):
-                num = num + Right['con'].pop()
-            Right['con'].append(num)
-            toSolve.append('combine RHS constant terms’')
-        elif len(Right['var']) > 0:
-            num = Right['var'].pop()
-            num = num * -1
-            Left['var'].append(num)
-            toSolve.append('add '+str(num)+'x')
-        elif len(Left['con']) > 0:
-            num = Left['con'].pop()
-            num = num * -1
-            Right['con'].append(num)
-            toSolve.append('add ' + str(num))
-    if Left['var'][0] != 1:
-        num = Left['var'][0]
-        Left['var'][0] = 1
-        Right['con'][0] = Right['con'][0]/num
-        toSolve.append('divide '+str(num))
+    toSolve = []
+    fol_list = fol(equation)
+    solve = logic.FolKB()
+    for terms in fol_list:
+        solve.tell(expr(terms))
+
+    while solve.ask(expr('Right(Variable,x)')) is not False:
+        term = str(solve.ask(expr('Right(Variable, x)'))[expr('x')])
+        num = str(solve.ask(expr('Value('+term+', y)'))[expr('y')])
+        solve.retract(expr('Right(Variable, '+term+')'))
+        solve.retract(expr('Value('+term+', '+num+')'))
+
+        new_num = str(int(num) * -1)
+        solve.tell(expr('Left(Variable, '+term+')'))
+        solve.tell(expr('Value(' + term + ', ' + new_num + ')'))
+        toSolve.append('add '+new_num+'x')
+
+    while solve.ask(expr('Left(Constant,x)')) is not False:
+        term = str(solve.ask(expr('Left(Constant, x)'))[expr('x')])
+        num = str(solve.ask(expr('Value(' + term + ', y)'))[expr('y')])
+        solve.retract(expr('Left(Constant, ' + term + ')'))
+        solve.retract(expr('Value(' + term + ', ' + num + ')'))
+
+        new_num = str(int(num) * -1)
+        solve.tell(expr('Right(Constant, ' + term + ')'))
+        solve.tell(expr('Value(' + term + ', ' + new_num + ')'))
+        toSolve.append('add ' + new_num)
+    num =[]
+
+    while solve.ask(expr('Left(Variable, s)')) is not False:
+        t = str(solve.ask(expr('Left(Variable, s)'))[expr('s')])
+        n = str(solve.ask(expr('Value(' + t + ', y)'))[expr('y')])
+        solve.retract(expr('Left(Variable, ' + t + ')'))
+        solve.retract(expr('Value(' + t + ', ' + n + ')'))
+        num.append(n)
+    while len(num) > 1:
+        temp = num.pop(0)
+        temp_t = num.pop(0)
+        num.append(int(temp) + int(temp_t))
+        toSolve.append('combine LHS variable terms’')
+    greater['1'] = num[0]
+    divide = num[0]
+    num.clear()
+    while solve.ask(expr('Right(Constant, s)')) is not False:
+        t = str(solve.ask(expr('Right(Constant, s)'))[expr('s')])
+        n = str(solve.ask(expr('Value(' + t + ', y)'))[expr('y')])
+        solve.retract(expr('Right(Constant, ' + t + ')'))
+        solve.retract(expr('Value(' + t + ', ' + n + ')'))
+        num.append(n)
+    while len(num) > 1:
+        temp = num.pop(0)
+        temp_t = num.pop(0)
+        num.append(int(temp) + int(temp_t))
+        toSolve.append('combine RHS constant terms’')
+    solve.tell(expr('Right(Constant, Y)'))
+    solve.tell(expr('Value(Y, ' + str(num[0]) + ')'))
+
+    if divide != 1:
+        toSolve.append('divide '+str(divide))
 
     return toSolve
+
 
 """ A2 Part C
 
@@ -257,6 +268,8 @@ def solveEquation(equation):
 CURRENT_SKILLS = ['S8', 'S9']
 EQUATION = '3x+2=8'
 SAMPLE_MISSING_SKILLS = ['S4', 'S5']
+
+
 def get_num(numberString):
     num = ''
     start = False
@@ -272,17 +285,25 @@ def get_num(numberString):
     return str(num)
 
 
-skills_knowledge = logic.FolKB(map(expr, ['Positive(x) & Variable(x) ==>Add(x, S1)', 'Negative(x) & Variable(x) ==>Add(x, S2)', 'Positive(x) & Constant(x) ==>Add(x, S3)', 'Negative(x) & Constant(x) ==>Add(x, S4)',
-                                              'Positive(x)==>Divide(x, S5)', 'Negative(x)==>Divide(x, S6)', 'Constant(x) & Constant(y) ==>Combine(Constant, S9)',
-                                              'Greater(x)==>Combine(Variable, S7)', 'Lesser(x)==>Combine(Variable, S8)']))
+skills_knowledge = logic.FolKB(map(expr, ['Positive(x) & Variable(x) ==>Add(x, S1)',
+                                          'Negative(x) & Variable(x) ==>Add(x, S2)',
+                                          'Positive(x) & Constant(x) ==>Add(x, S3)',
+                                          'Negative(x) & Constant(x) ==>Add(x, S4)',
+                                          'Positive(x)==>Divide(x, S5)', 'Negative(x)==>Divide(x, S6)',
+                                          'Constant(x) & Constant(y) ==>Combine(Constant, S9)',
+                                          'Greater(x)==>Combine(Variable, S7)', 'Lesser(x)==>Combine(Variable, S8)']))
+
+
 def predictSuccess(current_skills, equation):
     actions_list = solveEquation(equation)
     return skill_list(current_skills, actions_list)
     missing_skills = SAMPLE_MISSING_SKILLS
 
+
 def skill_list(current_skills, actions_list):
+
     delete_later = []
-    if greater[1]:
+    if greater['1'] > -1:
         skills_knowledge.tell(expr('Greater(True)'))
         delete_later.append(expr('Greater(True)'))
     else:
@@ -329,6 +350,7 @@ def skill_list(current_skills, actions_list):
         skills_knowledge.retract(actions)
     return skills_needed
 
+
 """ A2 Part D
 
     stepThroughProblem is a function that takes a problem, a student action, and a list of current student skills, and returns
@@ -350,21 +372,22 @@ EQUATION = '3x+2=8'
 ACTION = 'add -2'
 UPDATED_SKILLS = ['S8', 'S9', 'S4']
 
-actions_taken =[]
+actions_taken = []
 streak = 0
+
+
 def stepThroughProblem(equation, action, current_skills):
     global streak
-    feedback_message = M1
     message = ''
     current_action_needed = len(actions_taken)
 
     actions_needed = solveEquation(equation)
     if streak >= 3:
-        message=message+'CorrectStreak'
+        message = message + 'CorrectStreak'
     if streak <= -3:
-        message=message+'IncorrectStreak '
+        message = message + 'IncorrectStreak '
     if action == actions_needed[current_action_needed]:
-        message = message +'CorrectAnswer'
+        message = message + 'CorrectAnswer'
         if streak < 0:
             streak = 0
         streak = streak + 1
@@ -372,13 +395,13 @@ def stepThroughProblem(equation, action, current_skills):
     else:
         if streak > 0:
             streak = 0
-        streak = streak -1
-    skill = skill_list(current_skills, action)
+        streak = streak - 1
+    skill = skill_list(current_skills, [action])
     if len(skill) > 0:
-        message = message+'NewSkill'
+        message = message + 'NewSkill'
         current_skills.append(skill[0])
     else:
-        message=message+'MasteredSkill'
+        message = message + 'MasteredSkill'
 
     updated_skills = current_skills
     if len(actions_taken) == actions_needed:
