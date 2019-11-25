@@ -1842,7 +1842,6 @@ class FolKB(KB):
         return fol_bc_ask(self, query)
 
     def retract(self, sentence):
-        print(sentence)
         self.clauses.remove(sentence)
 
     def fetch_rules_for_goal(self, goal):

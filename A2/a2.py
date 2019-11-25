@@ -7,7 +7,49 @@ import planning
 
 greater = {}
 def fol(equation):
-   return 0
+    fol = []
+    middle = equation.find('=')
+    end = len(equation)
+    num = ""
+    for i in range(end):
+        if len(num) == 0 and equation[i] == '-':
+            num = equation[i]
+        elif equation[i].isdigit():
+            num = num + equation[i]
+        elif equation[i] == 'x':
+            if i < middle or i == middle:
+                side = 'Left'
+            else:
+                side = 'Right'
+            if len(num) == 0:
+                num = 1
+            elif num == '-':
+                num = -1
+            if side == 'Right':
+                fol.append('Right('+num+')')
+                fol.append('Variable('+num+')')
+            else:
+                fol.append('Left(' + num + ')')
+                fol.append('Variable(' + num + ')')
+            num = ''
+        elif len(num) > 0 and not (equation[i].isdigit()):
+            if i < middle or i == middle:
+                side = 'Left'
+            else:
+                side = 'Right'
+            if side == 'Right':
+                fol.append('Right(' + num + ')')
+                fol.append('Constant(' + num + ')')
+            else:
+                fol.append('Left(' + num + ')')
+                fol.append('Constant(' + num + ')')
+            num = ''
+            if equation[i] == '-':
+                num = '-'
+    if len(num) > 0:
+        fol.append('Right(' + num + ')')
+        fol.append('Constant(' + num + ')')
+    return fol
 """ A2 Part A
 
     giveFeedback is a function that reads in a student state and returns a feedback message using propositional logic and proof by resolution. The rules
@@ -114,6 +156,8 @@ SAMPLE_ACTION_PLAN = ['add 2', 'combine RHS constant terms', 'divide 3']
 
 
 def solveEquation(equation):
+    greater.clear()
+   # print(fol(equation))
     middle = equation.find('=')
     end = len(equation)
     num = ""
@@ -185,7 +229,6 @@ def solveEquation(equation):
             toSolve.append('add '+str(num)+'x')
         elif len(Left['con']) > 0:
             num = Left['con'].pop()
-            print(num)
             num = num * -1
             Right['con'].append(num)
             toSolve.append('add ' + str(num))
@@ -228,52 +271,63 @@ def get_num(numberString):
         i = i + 1
     return str(num)
 
-def predictSuccess(current_skills, equation):
-    greater.clear()
-    skills_knowledge = logic.FolKB(map(expr, ['Positive(x) & Variable(x) ==>Add(x, S1)', 'Negative(x) & Variable(x) ==>Add(x, S2)', 'Positive(x) & Constant(x) ==>Add(x, S3)', 'Negative(x) & Constant(x) ==>Add(x, S4)',
+
+skills_knowledge = logic.FolKB(map(expr, ['Positive(x) & Variable(x) ==>Add(x, S1)', 'Negative(x) & Variable(x) ==>Add(x, S2)', 'Positive(x) & Constant(x) ==>Add(x, S3)', 'Negative(x) & Constant(x) ==>Add(x, S4)',
                                               'Positive(x)==>Divide(x, S5)', 'Negative(x)==>Divide(x, S6)', 'Constant(x) & Constant(y) ==>Combine(Constant, S9)',
                                               'Greater(x)==>Combine(Variable, S7)', 'Lesser(x)==>Combine(Variable, S8)']))
-    #,
-
+def predictSuccess(current_skills, equation):
     actions_list = solveEquation(equation)
+    return skill_list(current_skills, actions_list)
+    missing_skills = SAMPLE_MISSING_SKILLS
+
+def skill_list(current_skills, actions_list):
+    delete_later = []
     if greater[1]:
         skills_knowledge.tell(expr('Greater(True)'))
+        delete_later.append(expr('Greater(True)'))
     else:
         skills_knowledge.tell(expr('Lesser(True)'))
+        delete_later.append(expr('Lesser(True)'))
     skills_needed = []
     x = ''
     for action in actions_list:
         if action.find('add') != -1:
             num = get_num(action)
             if action.find('-') == -1:
-                skills_knowledge.tell(expr('Positive('+num+')'))
+                skills_knowledge.tell(expr('Positive(' + num + ')'))
+                delete_later.append(expr('Positive(' + num + ')'))
             else:
-                skills_knowledge.tell(expr('Negative('+num+')'))
+                skills_knowledge.tell(expr('Negative(' + num + ')'))
+                delete_later.append(expr('Negative(' + num + ')'))
             if action.find('x') == -1:
-                skills_knowledge.tell(expr('Constant('+num+')'))
+                skills_knowledge.tell(expr('Constant(' + num + ')'))
+                delete_later.append(expr('Constant(' + num + ')'))
             else:
-                skills_knowledge.tell(expr('Variable('+num+')'))
-            x = skills_knowledge.ask(expr('Add('+num+', y)'))[expr('y')]
+                skills_knowledge.tell(expr('Variable(' + num + ')'))
+                delete_later.append(expr('Variable(' + num + ')'))
+            x = skills_knowledge.ask(expr('Add(' + num + ', y)'))[expr('y')]
 
         elif action.find('divide') != -1:
             num = get_num(action)
             if action.find('-') == -1:
-                skills_knowledge.tell(expr('Positive('+num+')'))
+                skills_knowledge.tell(expr('Positive(' + num + ')'))
+                skills_knowledge.tell(expr('Positive(' + num + ')'))
             else:
-                skills_knowledge.tell(expr('Negative('+num+')'))
+                skills_knowledge.tell(expr('Negative(' + num + ')'))
+                skills_knowledge.tell(expr('Negative(' + num + ')'))
             x = skills_knowledge.ask(expr('Divide(' + num + ', y)'))[expr('y')]
 
         elif action.find('constant') != -1:
-           x =  skills_knowledge.ask(expr('Combine(Constant, y)'))[expr('y')]
+            x = skills_knowledge.ask(expr('Combine(Constant, y)'))[expr('y')]
 
         elif action.find('variable') != -1:
             x = skills_knowledge.ask(expr('Combine(Variable, z)'))[expr('z')]
         skill = str(x)
         if current_skills.count(skill) == 0:
             skills_needed.append(skill)
-    missing_skills = SAMPLE_MISSING_SKILLS
+    for actions in delete_later:
+        skills_knowledge.retract(actions)
     return skills_needed
-
 
 """ A2 Part D
 
@@ -296,8 +350,38 @@ EQUATION = '3x+2=8'
 ACTION = 'add -2'
 UPDATED_SKILLS = ['S8', 'S9', 'S4']
 
-
+actions_taken =[]
+streak = 0
 def stepThroughProblem(equation, action, current_skills):
+    global streak
     feedback_message = M1
-    updated_skills = UPDATED_SKILLS
-    return [feedback_message, updated_skills]
+    message = ''
+    current_action_needed = len(actions_taken)
+
+    actions_needed = solveEquation(equation)
+    if streak >= 3:
+        message=message+'CorrectStreak'
+    if streak <= -3:
+        message=message+'IncorrectStreak '
+    if action == actions_needed[current_action_needed]:
+        message = message +'CorrectAnswer'
+        if streak < 0:
+            streak = 0
+        streak = streak + 1
+        actions_taken.append(action)
+    else:
+        if streak > 0:
+            streak = 0
+        streak = streak -1
+    skill = skill_list(current_skills, action)
+    if len(skill) > 0:
+        message = message+'NewSkill'
+        current_skills.append(skill[0])
+    else:
+        message=message+'MasteredSkill'
+
+    updated_skills = current_skills
+    if len(actions_taken) == actions_needed:
+        actions_taken.clear()
+        streak = 0
+    return [giveFeedback(message), updated_skills]
