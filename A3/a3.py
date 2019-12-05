@@ -80,14 +80,14 @@ def q8(A,B):
     T, F = True, False
     probability.BayesNet([('Accurate', '', 0.90),
                           ('ProblemSize', '', 0.90),
-                          ('Short','ProblemSize',
-                          {T:0.4, F:0.2}),
-                          ('Medium', 'ProblemSize',
-                           {T: 0.4, F: 0.3}),
-                          ('Large', 'ProblemSize',
-                           {T: 0.2, F: 0.5}),
-                          ('Resolved', 'Short Accurate',
-                           {(T, T): 0.3, (T, F): 0.2, (F, T): 0.29, (F, F): 0.001})])
+                          ('Long','ProblemSize',
+                          {T:0.2, F:0.5}),
+                          ('Resolved', 'Long Accurate',
+                           {(T, T): 0.7, (T, F): 0.4, (F, T): .8, (F, F): 0.5}),
+                          ('Frustrated', 'ProblemSize Long Accurate',
+                           {(T,T,T):.6,(T,T,F):.8,(T,F,T):.5,(F,T,T):.7}
+                           (F,T,F):)])
+
     burglary = BayesNet([('Burglary', '', 0.001),
                          ('Earthquake', '', 0.002),
                          ('Alarm', 'Burglary Earthquake',
