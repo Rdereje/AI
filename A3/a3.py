@@ -1,3 +1,5 @@
+import probability
+
 class Node:
     def __init__(self, type, probablity, level):
         self.type = type
@@ -73,6 +75,25 @@ def q2(turns):
 
 def q3():
     return len(q2(30).split(', '))
+
+def q8(A,B):
+    T, F = True, False
+    probability.BayesNet([('Accurate', '', 0.90),
+                          ('ProblemSize', '', 0.90),
+                          ('Short','ProblemSize',
+                          {T:0.4, F:0.2}),
+                          ('Medium', 'ProblemSize',
+                           {T: 0.4, F: 0.3}),
+                          ('Large', 'ProblemSize',
+                           {T: 0.2, F: 0.5}),
+                          ('Resolved', 'Short Accurate',
+                           {(T, T): 0.3, (T, F): 0.2, (F, T): 0.29, (F, F): 0.001})])
+    burglary = BayesNet([('Burglary', '', 0.001),
+                         ('Earthquake', '', 0.002),
+                         ('Alarm', 'Burglary Earthquake',
+                          {(T, T): 0.95, (T, F): 0.94, (F, T): 0.29, (F, F): 0.001}),
+                         ('JohnCalls', 'Alarm', {T: 0.90, F: 0.05}),
+                         ('MaryCalls', 'Alarm', {T: 0.70, F: 0.01})])
 
 
 
