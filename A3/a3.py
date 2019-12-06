@@ -287,6 +287,7 @@ def q9():
     globalize(network.lookup)
     result = (list(set(all_rows(network))))
     print(result)
+    return result
 
 
 def q10(turns):
