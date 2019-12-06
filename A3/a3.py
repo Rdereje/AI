@@ -53,8 +53,7 @@ def q2(turns):
             list.append(Node("Decision",curr.probablity*Pnotresolved, curr.level+1))
 
 
-    print(respondValue)
-    print(redirectValue)
+
     i = len(respondValue) -1
     while i >= 0:
         if i == len(respondValue) -1:
@@ -63,7 +62,7 @@ def q2(turns):
             respondChanceNode[i] = respondChanceNode[i+1] + redirectValue[i+1] + respondValue[i]
         i = i -1
 
-    print(respondChanceNode)
+
 
     i = 0
     path = ""
@@ -288,3 +287,61 @@ def q9():
     globalize(network.lookup)
     result = (list(set(all_rows(network))))
     print(result)
+
+
+def q10(turns):
+    Presolved = [.29, .48, .7]
+    Pfrustrated = [0.22, 0.32, 0.2]
+    d = 1
+    respondUtility = 100
+    list = []
+
+    root = Node("Decision", 1, 1)
+    list.append(root)
+    respondValue = [None] * turns
+    redirectValue = [None] * turns
+    respondProbalilty = [None] * turns
+    respondChanceNode = [None] * turns
+    s = 0
+    while(len(list)>0 and d <= turns):
+        Pnotresolved = 1- Presolved[s]
+        Pnotfrustrated = 1- Pfrustrated[s]
+        if d >= 6 and d <= 10:
+            s = 1
+        elif d > 10:
+            s = 2
+        curr = list.pop()
+        index = curr.level - 1
+        if curr.type == "Decision":
+            list.append(Node("Respond",curr.probablity, curr.level))
+            list.append(Node("Redirect", curr.probablity, curr.level))
+        elif curr.type == "Redirect":
+            redirectValue[index] = curr.probablity * ((Pfrustrated[s] * utility_frustrated(curr.level)) + Pnotfrustrated * utility_not_frustrated(curr.level))
+        elif curr.type == "Respond":
+            d = d+1
+            respondValue[index] = Presolved[s] * respondUtility * curr.probablity
+            respondProbalilty[index] = curr.probablity
+            list.append(Node("Decision",curr.probablity*Pnotresolved, curr.level+1))
+
+    i = len(respondValue) -1
+    while i >= 0:
+        if i == len(respondValue) -1:
+            respondChanceNode[i] = respondValue[i]
+        else:
+            respondChanceNode[i] = respondChanceNode[i+1] + redirectValue[i+1] + respondValue[i]
+        i = i -1
+
+    i = 0
+    path = ""
+    redirect = False
+    while i < turns and not redirect:
+        if respondValue[i] > redirectValue[i]:
+            path = path + ", Respond"
+        else:
+            path = path+", Redirect"
+            redirect =True
+        i = i + 1
+    if not redirect:
+        return q10(turns+10)
+    else:
+        return len(path[2:].split(', '))
