@@ -1,4 +1,4 @@
-import probability
+import probability4e
 
 class Node:
     def __init__(self, type, probablity, level):
@@ -76,28 +76,17 @@ def q2(turns):
 def q3():
     return len(q2(30).split(', '))
 
-def q8(A,B):
+def q8():
     T, F = True, False
-    probability.BayesNet([('Accurate', '', 0.90),
-                          ('ProblemSize', '', 0.90),
-                          ('Long','ProblemSize',
-                          {T:0.2, F:0.5}),
-                          ('Resolved', 'Long Accurate',
-                           {(T, T): 0.7, (T, F): 0.4, (F, T): .8, (F, F): 0.5}),
-                          ('Frustrated', 'ProblemSize Long Accurate',
-                           {(T,T,T):.6,(T,T,F):.8,(T,F,T):.5,(F,T,T):.7}
-                           (F,T,F):)])
+    network = probability4e.BayesNet([('Accurate', [], 0.90),
+                          ('ProblemSize', [], 0.90),
+                          ('ConversationLength', ['ProblemSize'],
+                           {T: probability4e.ProbDist('X',{'short':.4, 'medium':.4,'long':.6}),
+                            F:probability4e.ProbDist('X',{'short':.2, 'medium':.3,'long':.5})}),
+                          ('Resolved', ['Accurate', 'ConversationLength'],
+                           {(T,'short'):.3, (T,'medium'):.5, (T,'long'):.7,
+                            (F,'short'):.2, (F,'medium'):.3, (F,'long'):.4})])
 
-    burglary = BayesNet([('Burglary', '', 0.001),
-                         ('Earthquake', '', 0.002),
-                         ('Alarm', 'Burglary Earthquake',
-                          {(T, T): 0.95, (T, F): 0.94, (F, T): 0.29, (F, F): 0.001}),
-                         ('JohnCalls', 'Alarm', {T: 0.90, F: 0.05}),
-                         ('MaryCalls', 'Alarm', {T: 0.70, F: 0.01})])
-
-
-
-
-
+    probability4e.enumeration_ask('Resolved', dict(ConversationLength='long', ProblemSize=F, Accurate=T), network).show_approx()
 
 
