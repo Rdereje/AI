@@ -218,7 +218,7 @@ def matches_evidence(row, evidence, net):
     return all(evidence[v] == row[net.variables.index(v)]
                for v in evidence)
 
-def q8():
+def q8(A,B):
     T, F = True, False
     network = BayesNet()
     network.add('Accurate', [], 0.90)
@@ -229,5 +229,42 @@ def q8():
     network.add('Resolved', ['Accurate', 'ConversationLength'],
                     {(T,'short'):.3, (T,'medium'):.5, (T,'long'):.7,
                      (F,'short'):.2, (F,'medium'):.3, (F,'long'):.4})
+    network.add('Frustrated', ['ProblemSize', 'ConversationLength', 'Accurate'],
+                {(T,'short',T):.2,(T,'short',F):.4,(T,'medium',T):.3,(T,'medium',F):.5, (T,'long',T):.6,(T,'long',F):.8,
+                 (F,'short',T):.3,(F,'short',F):.5,(F,'medium',T):.6,(F,'medium',F):.8, (F,'long',T):.7,(F,'long',F):.9})
     globalize(network.lookup)
-    print(P(Resolved, {ConversationLength:'long', ProblemSize:F, Accurate:T}))
+    if A == 'Resolved':
+        X = Resolved
+    elif A=='Problem_Size':
+        X = ProblemSize
+    elif A == 'Conversation_Length':
+        X = ConversationLength
+    elif A == 'Accuracte':
+        X = Accurate
+    elif A == 'Frustrated':
+        X = Frustrated
+
+    variables = B.split(', ')
+    Y = {}
+    for v in variables:
+        temp = v.split(':')
+        if temp[0] == 'Resolved':
+            left = Resolved
+        elif temp[0] == 'Problem_Size':
+            left = ProblemSize
+        elif temp[0] == 'Conversation_Length':
+            left = ConversationLength
+        elif temp[0] == 'Accurate':
+            left = Accurate
+        elif temp[0] == 'Frustrated':
+            left = Frustrated
+        if temp[1] == 'T':
+            right = T
+        elif temp[1] == 'F':
+            right = F
+        else:
+            right = temp[1]
+        Y[left] = right
+
+    print(enumeration_ask(X, Y, network))
+    #{ConversationLength:'long', ProblemSize:F, Accurate:T}
