@@ -265,6 +265,26 @@ def q8(A,B):
         else:
             right = temp[1]
         Y[left] = right
-
-    print(enumeration_ask(X, Y, network))
+    results = enumeration_ask(X, Y, network)
+    print(results)
+    return results
     #{ConversationLength:'long', ProblemSize:F, Accurate:T}
+def q9():
+    T, F = True, False
+    network = BayesNet()
+    network.add('Accurate', [], 0.90)
+    network.add('ProblemSize', [], 0.90)
+    network.add('ConversationLength', ['ProblemSize'],
+                {T: ProbDist(short=.4, medium=.4, long=.6),
+                 F: ProbDist(short=.2, medium=.3, long=.5)})
+    network.add('Resolved', ['Accurate', 'ConversationLength'],
+                {(T, 'short'): .3, (T, 'medium'): .5, (T, 'long'): .7,
+                 (F, 'short'): .2, (F, 'medium'): .3, (F, 'long'): .4})
+    network.add('Frustrated', ['ProblemSize', 'ConversationLength', 'Accurate'],
+                {(T, 'short', T): .2, (T, 'short', F): .4, (T, 'medium', T): .3, (T, 'medium', F): .5,
+                 (T, 'long', T): .6, (T, 'long', F): .8,
+                 (F, 'short', T): .3, (F, 'short', F): .5, (F, 'medium', T): .6, (F, 'medium', F): .8,
+                 (F, 'long', T): .7, (F, 'long', F): .9})
+    globalize(network.lookup)
+    result = (list(set(all_rows(network))))
+    print(result)
